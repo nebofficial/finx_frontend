@@ -232,14 +232,14 @@ export default function InvoicesPage() {
 
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <Input
               placeholder="Search by invoice ID or tenant name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-white border-input-border"
-              icon={<Search className="w-4 h-4" />}
+              className="bg-white border-input-border pr-10"
             />
+            <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           </div>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-4 py-2 border border-input-border rounded-lg bg-white text-card-foreground">
             <option value="all">All Status</option>
