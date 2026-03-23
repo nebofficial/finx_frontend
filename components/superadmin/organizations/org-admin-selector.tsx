@@ -1,76 +1,90 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { superAdminApi } from '@/services/api/superAdminApi'
+import { toast } from 'sonner'
 
-const mockAdmins = [
-  { id: 'admin-1', name: 'John Smith', email: 'john@greenvalley.coop' },
-  { id: 'admin-2', name: 'Sarah Johnson', email: 'sarah@urbanfarmers.coop' },
-  { id: 'admin-3', name: 'Michael Brown', email: 'michael@mountainridge.coop' },
-  { id: 'admin-4', name: 'Emily Davis', email: 'emily@riverside.coop' },
-]
-
-interface OrgAdminSelectorProps {
-  currentAdmin: string
-  currentAdminId: string
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  role: string
+  is_active?: boolean
 }
 
-export default function OrgAdminSelector({ currentAdmin, currentAdminId }: OrgAdminSelectorProps) {
-  const [selectedAdmin, setSelectedAdmin] = useState(currentAdminId)
-  const [isSaving, setIsSaving] = useState(false)
+export default function OrgAdminSelector() {
+  const [users, setUsers] = useState<UserRow[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleSave = async () => {
-    setIsSaving(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false)
-    }, 1000)
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await superAdminApi.listUsers({ limit: 200 })
+      const list = (res.data?.data?.users || []) as UserRow[]
+      const admins = list.filter((u) => ['SuperAdmin', 'Admin', 'BranchAdmin'].includes(u.role))
+      setUsers(admins)
+    } catch {
+      toast.error('Failed to load users.')
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-gray-600 py-4">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading administrators…
+      </div>
+    )
   }
 
-  const selectedAdminData = mockAdmins.find(a => a.id === selectedAdmin)
+  if (users.length === 0) {
+    return (
+      <p className="text-sm text-gray-600">
+        No admin users found. Invite staff from{' '}
+        <Link href="/admin/members" className="text-primary underline">
+          Members
+        </Link>
+        .
+      </p>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="text-sm font-medium text-gray-700 block mb-2">Select Organization Admin</label>
-        <Select value={selectedAdmin} onValueChange={setSelectedAdmin}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {mockAdmins.map(admin => (
-              <SelectItem key={admin.id} value={admin.id}>
-                {admin.name} ({admin.email})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <p className="text-sm text-gray-600">
+        Tenant users with elevated roles (from <code className="text-xs bg-gray-100 px-1 rounded">GET /super-admin/users</code>
+        ). There is no API to reassign a single “organization admin” identity; manage accounts in Members.
+      </p>
+      <div className="space-y-2">
+        {users.map((u) => (
+          <Card key={u.id} className="p-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-medium text-gray-900">{u.name}</p>
+              <p className="text-sm text-gray-600">{u.email}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{u.role}</Badge>
+              {u.is_active === false && (
+                <Badge className="bg-gray-100 text-gray-800">Inactive</Badge>
+              )}
+            </div>
+          </Card>
+        ))}
       </div>
-
-      {selectedAdminData && (
-        <Card className="p-4 bg-blue-50 border-blue-200">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-900">Selected Admin</p>
-            <p className="text-sm text-gray-600">{selectedAdminData.name}</p>
-            <p className="text-sm text-gray-600">{selectedAdminData.email}</p>
-          </div>
-        </Card>
-      )}
-
-      <Button 
-        onClick={handleSave} 
-        disabled={isSaving || selectedAdmin === currentAdminId}
-        className="w-full"
-      >
-        {isSaving ? 'Saving...' : 'Update Admin'}
+      <Button asChild variant="outline" className="w-full sm:w-auto">
+        <Link href="/admin/members">Open member management</Link>
       </Button>
     </div>
   )

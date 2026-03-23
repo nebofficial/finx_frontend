@@ -17,37 +17,44 @@ const menuItems = [
       { label: 'Platform Overview', href: '/systemadmin/system' },
       { label: 'Global Settings', href: '/systemadmin/system/settings' },
       { label: 'System Status', href: '/systemadmin/system/status' },
-    ],
+    ]
   },
   { icon: Building2, label: 'Tenants', href: '/systemadmin/tenants' },
   { icon: Users, label: 'Users', href: '/systemadmin/users' },
   { icon: Lock, label: 'Roles & Permissions', href: '/systemadmin/roles-permissions' },
-  {
-    icon: CreditCard, label: 'Billing', href: '/systemadmin/billing',
+  { 
+    icon: CreditCard, 
+    label: 'Billing', 
+    href: '/systemadmin/billing',
     submenu: [
       { label: 'Subscriptions', href: '/systemadmin/billing' },
       { label: 'Plans', href: '/systemadmin/billing/plans' },
       { label: 'Invoices', href: '/systemadmin/billing/invoices' },
       { label: 'Revenue', href: '/systemadmin/billing/revenue' },
-    ],
+    ]
   },
   { icon: BarChart3, label: 'Analytics', href: '/systemadmin/analytics' },
   {
-    icon: Database, label: 'Monitoring', href: '/systemadmin/monitoring',
+    icon: Database,
+    label: 'Monitoring',
+    href: '/systemadmin/monitoring',
     submenu: [
+      { label: 'Overview', href: '/systemadmin/monitoring' },
       { label: 'Audit Logs', href: '/systemadmin/monitoring/audit-logs' },
       { label: 'Security', href: '/systemadmin/monitoring/security' },
       { label: 'Performance', href: '/systemadmin/monitoring/performance' },
-    ],
+    ]
   },
   { icon: MessageSquare, label: 'Support', href: '/systemadmin/support' },
-  {
-    icon: Key, label: 'Integration', href: '/systemadmin/integration',
+  { 
+    icon: Key,
+    label: 'Integration',
+    href: '/systemadmin/integration',
     submenu: [
       { label: 'API Keys', href: '/systemadmin/integration/api-keys' },
       { label: 'Webhooks', href: '/systemadmin/integration/webhooks' },
       { label: 'Rate Limiting', href: '/systemadmin/integration/rate-limiting' },
-    ],
+    ]
   },
   { icon: Settings, label: 'Settings', href: '/systemadmin/settings' },
 ]

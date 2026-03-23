@@ -7,15 +7,28 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+
+export type TenantSummary = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  address?: string | null
+  status?: string | null
+}
 
 interface OrgDetailsModalProps {
-  org: any
+  org: TenantSummary | null
+  planLabel?: string
   isOpen: boolean
   onClose: () => void
 }
 
-export default function OrgDetailsModal({ org, isOpen, onClose }: OrgDetailsModalProps) {
+export default function OrgDetailsModal({ org, planLabel, isOpen, onClose }: OrgDetailsModalProps) {
   if (!org) return null
+
+  const active = org.status === 'active' || org.status === 'trial'
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -23,7 +36,7 @@ export default function OrgDetailsModal({ org, isOpen, onClose }: OrgDetailsModa
         <DialogHeader>
           <DialogTitle>{org.name}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -32,28 +45,25 @@ export default function OrgDetailsModal({ org, isOpen, onClose }: OrgDetailsModa
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Phone</label>
-              <p className="text-gray-900 mt-1">{org.phone}</p>
+              <p className="text-gray-900 mt-1">{org.phone || '—'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Status</label>
-              <Badge className={org.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} className="mt-1">
-                {org.status}
+              <Badge
+                className={cn('mt-1', active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')}
+              >
+                {org.status || '—'}
               </Badge>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Plan</label>
-              <p className="text-gray-900 mt-1 capitalize font-semibold">{org.plan}</p>
+              <p className="text-gray-900 mt-1 capitalize font-semibold">{planLabel || '—'}</p>
             </div>
           </div>
 
           <div>
             <label className="text-sm font-medium text-gray-600">Address</label>
-            <p className="text-gray-900 mt-1">{org.address}</p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Description</label>
-            <p className="text-gray-900 mt-1">{org.description}</p>
+            <p className="text-gray-900 mt-1 whitespace-pre-wrap">{org.address || '—'}</p>
           </div>
         </div>
       </DialogContent>

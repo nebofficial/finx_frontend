@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FieldGroup, FieldLabel, Field, FieldSet, FieldLegend } from '@/components/ui/field'
+import { Label } from '@/components/ui/label'
 
 export default function GlobalConfigForm() {
   const [isSaving, setIsSaving] = useState(false)

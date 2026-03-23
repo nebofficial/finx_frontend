@@ -1,57 +1,84 @@
 'use client'
 
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TrendingUp, DollarSign, Users, ShoppingCart } from 'lucide-react'
+import { billingApi } from '@/services/api/billingApi'
+import { getApiErrorMessage } from '@/lib/api-error'
+import { toast } from 'sonner'
 
 export default function RevenueAnalyticsPage() {
-  const revenueData = [
-    { month: 'Jan', revenue: 24000, target: 30000, growth: 8 },
-    { month: 'Feb', revenue: 28000, target: 30000, growth: 12 },
-    { month: 'Mar', revenue: 32000, target: 35000, growth: 14 },
-    { month: 'Apr', revenue: 38000, target: 35000, growth: 18 },
-    { month: 'May', revenue: 42000, target: 40000, growth: 21 },
-    { month: 'Jun', revenue: 47293, target: 45000, growth: 24 },
-  ]
+  const hasLoadedRef = useRef(false)
+  const [stats, setStats] = useState({ mrr: 0, active_subscriptions: 0, total_tenants: 0 })
+  const [revenueData, setRevenueData] = useState<any[]>([])
+  const [planRevenue, setPlanRevenue] = useState<any[]>([])
 
-  const planRevenue = [
-    { name: 'Enterprise', value: 28000, percentage: 59 },
-    { name: 'Professional', value: 14000, percentage: 30 },
-    { name: 'Basic', value: 5000, percentage: 11 },
-  ]
+  useEffect(() => {
+    if (hasLoadedRef.current) return
+    hasLoadedRef.current = true
+    const load = async () => {
+      try {
+        const res = await billingApi.getAnalytics()
+        const data = res.data.data
+        setStats(data.stats || { mrr: 0, active_subscriptions: 0, total_tenants: 0 })
+        setRevenueData((data.revenue_trend || []).map((x: any, idx: number) => ({
+          month: x.month,
+          revenue: Number(x.revenue || 0),
+          target: Number(x.revenue || 0) * 1.1,
+          growth: idx === 0 ? 0 : (((Number(x.revenue || 0) - Number((data.revenue_trend[idx - 1]?.revenue || 0))) / Math.max(1, Number(data.revenue_trend[idx - 1]?.revenue || 1))) * 100).toFixed(0),
+        })))
+        const dist = data.plan_distribution || []
+        const total = dist.reduce((s: number, d: any) => s + Number(d.count || 0), 0)
+        setPlanRevenue(dist.map((d: any) => ({
+          name: d.plan,
+          value: Number(d.count || 0),
+          percentage: total ? Math.round((Number(d.count || 0) / total) * 100) : 0,
+        })))
+      } catch (err: unknown) {
+        const msg = getApiErrorMessage(err, 'Failed to load revenue analytics.')
+        if (process.env.NODE_ENV === 'development') console.error('[RevenueAnalytics] getAnalytics failed:', err)
+        toast.error(msg)
+      }
+    }
+    void load()
+    const onBillingChange = () => { void load() }
+    window.addEventListener('billing:data-changed', onBillingChange)
+    return () => window.removeEventListener('billing:data-changed', onBillingChange)
+  }, [])
 
   const COLORS = ['#00AA00', '#FFD700', '#2196F3']
 
-  const metrics = [
+  const metrics = useMemo(() => [
     {
       label: 'Monthly Recurring Revenue',
-      value: '$47,293',
-      change: '+24%',
+      value: `$${Number(stats.mrr || 0).toFixed(2)}`,
+      change: 'Live',
       icon: DollarSign,
       color: 'bg-green-100',
     },
     {
       label: 'Annual Revenue Run Rate',
-      value: '$567,516',
-      change: '+24%',
+      value: `$${(Number(stats.mrr || 0) * 12).toFixed(2)}`,
+      change: 'Live',
       icon: TrendingUp,
       color: 'bg-blue-100',
     },
     {
       label: 'Paid Tenants',
-      value: '133',
-      change: '+8%',
+      value: String(stats.active_subscriptions || 0),
+      change: 'Live',
       icon: Users,
       color: 'bg-yellow-100',
     },
     {
       label: 'Avg Revenue per Tenant',
-      value: '$356',
-      change: '+6%',
+      value: `$${stats.total_tenants ? (Number(stats.mrr || 0) / stats.total_tenants).toFixed(2) : '0.00'}`,
+      change: 'Live',
       icon: ShoppingCart,
       color: 'bg-purple-100',
     },
-  ]
+  ], [stats])
 
   return (
     <div className="space-y-6">

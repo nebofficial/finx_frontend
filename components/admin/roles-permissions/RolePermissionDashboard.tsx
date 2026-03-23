@@ -53,7 +53,7 @@ export function RolePermissionDashboard() {
 
   useEffect(() => {
     void reload()
-  }, [scope, status])
+  }, [scope, status, search])
 
   const runAction = async (handler: () => Promise<void>, okMessage: string) => {
     try {

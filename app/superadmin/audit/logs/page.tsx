@@ -9,10 +9,9 @@ import { useState } from 'react'
 
 export default function AuditLogsPage() {
   const [filters, setFilters] = useState({
-    action: 'all',
-    organization: 'all',
-    user: '',
-    dateRange: 'all'
+    source: 'all',
+    search: '',
+    dateRange: 'all',
   })
 
   return (

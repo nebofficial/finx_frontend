@@ -67,8 +67,8 @@ export default function TicketDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900">{mockTicket.subject}</h1>
               <Badge className={
                 mockTicket.priority === 'high' ? 'bg-red-100 text-red-800' :
-                mockTicket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-blue-100 text-blue-800'
+                  mockTicket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-blue-100 text-blue-800'
               }>
                 {mockTicket.priority.toUpperCase()}
               </Badge>
@@ -133,7 +133,7 @@ export default function TicketDetailPage() {
       </div>
 
       {showImpersonate && (
-        <ImpersonationModal 
+        <ImpersonationModal
           organizationId={mockTicket.organizationId}
           organizationName={mockTicket.organization}
           onClose={() => setShowImpersonate(false)}

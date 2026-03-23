@@ -1,144 +1,113 @@
 'use client'
 
+import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Edit2, Trash2, CheckCircle2 } from 'lucide-react'
-
-const mockPlans = [
-  {
-    id: '1',
-    name: 'Trial',
-    monthlyPrice: 0,
-    annualPrice: 0,
-    description: '14-day free trial',
-    users: 'Unlimited',
-    storage: '5 GB',
-    features: ['Basic reporting', 'Email support'],
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Starter',
-    monthlyPrice: 99,
-    annualPrice: 990,
-    description: 'For small cooperatives',
-    users: 'Up to 10',
-    storage: '50 GB',
-    features: ['Advanced reporting', 'Priority support', 'API access'],
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'Premium',
-    monthlyPrice: 299,
-    annualPrice: 2990,
-    description: 'For growing cooperatives',
-    users: 'Up to 50',
-    storage: '500 GB',
-    features: ['All Starter features', 'Custom branding', 'Dedicated support'],
-    status: 'active'
-  },
-  {
-    id: '4',
-    name: 'Enterprise',
-    monthlyPrice: 799,
-    annualPrice: 7990,
-    description: 'For large organizations',
-    users: 'Unlimited',
-    storage: 'Unlimited',
-    features: ['All Premium features', 'SLA', 'Custom integrations'],
-    status: 'active'
-  },
-]
+import { Loader2 } from 'lucide-react'
+import { superAdminApi } from '@/services/api/superAdminApi'
+import { toast } from 'sonner'
 
 export default function PlanManager() {
+  const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState<{
+    name?: string
+    price_monthly?: number
+    price_yearly?: number
+    max_users?: number
+    max_branches?: number
+    trial_days?: number
+  } | null>(null)
+  const [tenantStatus, setTenantStatus] = useState<string>('')
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await superAdminApi.getSubscription()
+      const p = res.data?.data?.subscription?.plan
+      setPlan(p ? { ...p } : null)
+      setTenantStatus(String(res.data?.data?.tenant_status || ''))
+    } catch {
+      toast.error('Failed to load subscription.')
+      setPlan(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  if (loading) {
+    return (
+      <Card className="p-8 flex items-center gap-2 text-gray-600">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        Loading subscription…
+      </Card>
+    )
+  }
+
+  if (!plan) {
+    return (
+      <Card className="p-8 space-y-3">
+        <p className="text-gray-800 font-medium">No active subscription record found.</p>
+        <p className="text-sm text-gray-600">
+          Plans are assigned on the platform. If you are a system operator, manage billing in System Admin.
+        </p>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/systemadmin/billing/plans">Open platform billing</Link>
+        </Button>
+      </Card>
+    )
+  }
+
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow className="border-b border-gray-200">
-            <TableHead className="text-gray-700 font-semibold">Plan Name</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Monthly Price</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Users</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Storage</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Features</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Status</TableHead>
-            <TableHead className="text-right text-gray-700 font-semibold">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {mockPlans.map((plan) => (
-            <TableRow key={plan.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <TableCell>
-                <div>
-                  <p className="font-semibold text-gray-900">{plan.name}</p>
-                  <p className="text-xs text-gray-600">{plan.description}</p>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div>
-                  <p className="font-semibold text-gray-900">${plan.monthlyPrice}</p>
-                  <p className="text-xs text-gray-600">${plan.annualPrice}/yr</p>
-                </div>
-              </TableCell>
-              <TableCell className="text-gray-600">{plan.users}</TableCell>
-              <TableCell className="text-gray-600">{plan.storage}</TableCell>
-              <TableCell>
-                <div className="flex gap-1 flex-wrap max-w-xs">
-                  {plan.features.slice(0, 2).map((feature, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs">{feature}</Badge>
-                  ))}
-                  {plan.features.length > 2 && (
-                    <Badge variant="outline" className="text-xs">+{plan.features.length - 2}</Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge className="bg-green-100 text-green-800 flex items-center gap-1 w-fit">
-                  <CheckCircle2 size={12} />
-                  Active
+    <div className="space-y-4">
+      <Card className="p-6 space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">{plan.name}</h2>
+            {tenantStatus && (
+              <p className="text-sm text-gray-600 mt-1">
+                Tenant status:{' '}
+                <Badge variant="outline" className="ml-1">
+                  {tenantStatus}
                 </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Edit2 size={16} className="mr-2" />
-                      Edit Plan
-                    </DropdownMenuItem>
-                    {plan.name !== 'Trial' && (
-                      <DropdownMenuItem className="cursor-pointer text-red-600">
-                        <Trash2 size={16} className="mr-2" />
-                        Delete Plan
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+              </p>
+            )}
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/systemadmin/billing/plans">Platform plan catalog</Link>
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-gray-500">Monthly</p>
+            <p className="font-semibold text-gray-900">${Number(plan.price_monthly ?? 0)}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Yearly</p>
+            <p className="font-semibold text-gray-900">${Number(plan.price_yearly ?? 0)}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Trial days</p>
+            <p className="font-semibold text-gray-900">{plan.trial_days ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Max users</p>
+            <p className="font-semibold text-gray-900">{plan.max_users ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Max branches</p>
+            <p className="font-semibold text-gray-900">{plan.max_branches ?? '—'}</p>
+          </div>
+        </div>
+      </Card>
+      <p className="text-xs text-gray-500 px-1">
+        Creating or editing global plans is limited to System Admin. This screen shows the plan linked to your tenant subscription.
+      </p>
+    </div>
   )
 }

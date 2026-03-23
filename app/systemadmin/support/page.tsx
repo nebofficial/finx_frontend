@@ -15,7 +15,7 @@ export default function SupportPage() {
       <SupportStats />
 
       <div className="flex justify-end">
-        <Link href="/admin/support/add">
+        <Link href="/systemadmin/support/new">
           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
             <Plus size={20} />
             New Ticket

@@ -1,83 +1,91 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { Activity, Server, Database, Network, Zap, HardDrive } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { Activity, Server, Database, Loader2 } from 'lucide-react'
+import { platformApi, type PlatformStatusPayload } from '@/services/api/platformApi'
+import { getApiErrorMessage } from '@/lib/api-error'
+import { toast } from 'sonner'
+
+function formatUptime(seconds: number) {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 48) return `${Math.floor(h / 24)}d ${h % 24}h`
+  return `${h}h ${m}m`
+}
 
 export default function SystemStatusPage() {
-  const cpuData = [
-    { time: '12:00', value: 45 },
-    { time: '12:15', value: 52 },
-    { time: '12:30', value: 48 },
-    { time: '12:45', value: 61 },
-    { time: '13:00', value: 55 },
-    { time: '13:15', value: 67 },
-    { time: '13:30', value: 70 },
-  ]
+  const [data, setData] = useState<PlatformStatusPayload | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const memoryData = [
-    { time: '12:00', value: 62 },
-    { time: '12:15', value: 65 },
-    { time: '12:30', value: 68 },
-    { time: '12:45', value: 71 },
-    { time: '13:00', value: 69 },
-    { time: '13:15', value: 73 },
-    { time: '13:30', value: 76 },
-  ]
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await platformApi.getStatus()
+        if (mounted) setData(res.data?.data as PlatformStatusPayload)
+      } catch (e) {
+        toast.error(getApiErrorMessage(e, 'Failed to load platform status'))
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const memPct =
+    data?.host?.totalmem_mb && data.host.totalmem_mb > 0
+      ? Math.round(((data.host.totalmem_mb - data.host.freemem_mb) / data.host.totalmem_mb) * 100)
+      : null
 
   const services = [
-    { name: 'API Gateway', status: 'healthy', uptime: '99.98%', responseTime: '125ms', requests: '2.5M/day' },
-    { name: 'Database Cluster', status: 'healthy', uptime: '99.99%', responseTime: '45ms', requests: '15M/day' },
-    { name: 'Cache Layer (Redis)', status: 'healthy', uptime: '99.95%', responseTime: '5ms', requests: '50M/day' },
-    { name: 'Message Queue', status: 'warning', uptime: '95%', responseTime: '200ms', requests: '5M/day' },
-    { name: 'Storage Service', status: 'healthy', uptime: '99.97%', responseTime: '350ms', requests: '1M/day' },
-    { name: 'Search Engine (ES)', status: 'healthy', uptime: '99.96%', responseTime: '200ms', requests: '3M/day' },
+    {
+      name: 'HTTP API (this process)',
+      status: data?.database_ok ? 'healthy' : 'critical',
+      detail: data ? `Uptime ${formatUptime(data.process.uptime_seconds)}` : '—',
+      extra: data ? `Heap ${data.process.memory_heap_used_mb} / ${data.process.memory_heap_total_mb} MB` : '—',
+    },
+    {
+      name: 'PostgreSQL (main)',
+      status: data?.database_ok ? 'healthy' : 'critical',
+      detail: data?.database_ok ? 'Connection OK' : 'Cannot authenticate',
+      extra: data?.node_env ?? '—',
+    },
+    {
+      name: 'SMTP (outbound email)',
+      status: data?.smtp_configured ? 'healthy' : 'warning',
+      detail: data?.smtp_configured ? 'Configured' : 'Set SMTP_* in backend .env',
+      extra: 'Invoices & welcome mail',
+    },
   ]
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-green-100 text-green-800'
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'critical':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusIndicator = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-success'
-      case 'warning':
-        return 'bg-warning'
-      case 'critical':
-        return 'bg-destructive'
-      default:
-        return 'bg-muted-foreground'
-    }
-  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-card-foreground">System Status</h1>
-        <p className="text-muted-foreground mt-2">Real-time infrastructure monitoring and performance metrics</p>
+        <h1 className="text-3xl font-bold text-card-foreground">System status</h1>
+        <p className="text-muted-foreground mt-2">Live snapshot from the FinX API process and host</p>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {loading && (
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-muted-foreground text-sm mb-2">CPU Usage</p>
-              <p className="text-3xl font-bold text-card-foreground">70%</p>
-              <p className="text-xs text-warning mt-2">High utilization</p>
+              <p className="text-muted-foreground text-sm mb-2">Process memory (heap)</p>
+              <p className="text-3xl font-bold text-card-foreground">
+                {data ? `${data.process.memory_heap_used_mb} MB` : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">V8 heap used / total</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Zap className="w-6 h-6 text-yellow-600" />
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Activity className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </Card>
@@ -85,12 +93,16 @@ export default function SystemStatusPage() {
         <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-muted-foreground text-sm mb-2">Memory Usage</p>
-              <p className="text-3xl font-bold text-card-foreground">76%</p>
-              <p className="text-xs text-warning mt-2">86GB / 112GB</p>
+              <p className="text-muted-foreground text-sm mb-2">Host memory used</p>
+              <p className="text-3xl font-bold text-card-foreground">{memPct != null ? `${memPct}%` : '—'}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {data
+                  ? `${data.host.totalmem_mb - data.host.freemem_mb} / ${data.host.totalmem_mb} MB · ${data.host.platform}`
+                  : '—'}
+              </p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <HardDrive className="w-6 h-6 text-yellow-600" />
+            <div className="p-3 bg-amber-100 rounded-lg">
+              <Server className="w-6 h-6 text-amber-600" />
             </div>
           </div>
         </Card>
@@ -98,81 +110,62 @@ export default function SystemStatusPage() {
         <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-muted-foreground text-sm mb-2">Disk I/O</p>
-              <p className="text-3xl font-bold text-card-foreground">2.4GB/s</p>
-              <p className="text-xs text-success mt-2">Within limits</p>
+              <p className="text-muted-foreground text-sm mb-2">Load average (1m)</p>
+              <p className="text-3xl font-bold text-card-foreground">
+                {data ? data.host.loadavg_1m.toFixed(2) : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {data ? `5m ${data.host.loadavg_5m.toFixed(2)} · 15m ${data.host.loadavg_15m.toFixed(2)}` : '—'}
+              </p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
-              <Network className="w-6 h-6 text-success" />
+              <Database className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-card-foreground mb-4">CPU Usage (Last Hour)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={cpuData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="time" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <Tooltip contentStyle={{ backgroundColor: '#F3F4F6', border: 'none', borderRadius: '8px' }} />
-              <Line type="monotone" dataKey="value" stroke="#00AA00" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-card-foreground mb-4">Memory Usage (Last Hour)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={memoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="time" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <Tooltip contentStyle={{ backgroundColor: '#F3F4F6', border: 'none', borderRadius: '8px' }} />
-              <Line type="monotone" dataKey="value" stroke="#2196F3" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-      </div>
-
-      {/* Service Status */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold text-card-foreground mb-4">Service Status</h2>
+        <h2 className="text-lg font-semibold text-card-foreground mb-4">Services</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-light">
-                <th className="text-left py-3 px-4 font-semibold text-card-foreground text-sm">Service</th>
-                <th className="text-left py-3 px-4 font-semibold text-card-foreground text-sm">Status</th>
-                <th className="text-left py-3 px-4 font-semibold text-card-foreground text-sm">Uptime</th>
-                <th className="text-left py-3 px-4 font-semibold text-card-foreground text-sm">Response Time</th>
-                <th className="text-left py-3 px-4 font-semibold text-card-foreground text-sm">Requests/Day</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm">Service</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm">Status</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm">Detail</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm">Notes</th>
               </tr>
             </thead>
             <tbody>
-              {services.map((service) => (
-                <tr key={service.name} className="border-b border-border-light hover:bg-muted transition-colors">
-                  <td className="py-3 px-4 text-sm text-card-foreground font-medium">{service.name}</td>
+              {services.map((s) => (
+                <tr key={s.name} className="border-b border-border-light">
+                  <td className="py-3 px-4 text-sm font-medium">{s.name}</td>
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getStatusIndicator(service.status)}`} />
-                      <span className={`text-xs px-2 py-1 rounded ${getStatusColor(service.status)}`}>
-                        {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
-                      </span>
-                    </div>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${
+                        s.status === 'healthy'
+                          ? 'bg-green-100 text-green-800'
+                          : s.status === 'warning'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {s.status}
+                    </span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-card-foreground">{service.uptime}</td>
-                  <td className="py-3 px-4 text-sm text-card-foreground">{service.responseTime}</td>
-                  <td className="py-3 px-4 text-sm text-card-foreground">{service.requests}</td>
+                  <td className="py-3 px-4 text-sm">{s.detail}</td>
+                  <td className="text-sm text-muted-foreground py-3 px-4">{s.extra}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </Card>
+
+      <p className="text-xs text-muted-foreground">
+        Historical CPU/memory charts are not collected yet; values above are point-in-time from the API server.
+      </p>
     </div>
   )
 }

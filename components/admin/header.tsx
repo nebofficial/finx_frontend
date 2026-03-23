@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, LogOut, Search, Settings, User } from 'lucide-react'
+import { Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,32 +9,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation'
+import { useMemo } from 'react'
+import { getAuthPayloadDisplay } from '@/lib/auth-display'
 
-export function Header() {
+export default function Header() {
+  const router = useRouter()
+  const payload = useMemo(() => getAuthPayloadDisplay(), [])
+  const email = payload?.email || 'Signed in'
+  const role = payload?.role || 'Admin'
+
+  const logout = () => {
+    Cookies.remove('auth_token')
+    Cookies.remove('refresh_token')
+    router.push('/login')
+  }
+
   return (
-    <header className="bg-white border-b border-gray-200 h-16 px-6 flex items-center justify-between shadow-sm">
+    <header className="bg-white border-b border-border h-16 px-6 flex items-center justify-between shadow-sm">
       <div className="flex-1 max-w-sm">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <input
-            type="text"
-            placeholder="Search branches, members..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            type="search"
+            placeholder="Search members, branches…"
+            className="w-full pl-10 pr-4 py-2 bg-muted/40 border border-border rounded-lg text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 relative"
-        >
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-card-foreground relative">
           <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
         </Button>
 
-        <div className="h-8 w-px bg-gray-200" />
+        <div className="h-8 w-px bg-border" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -47,21 +57,17 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-1.5 text-sm font-medium text-gray-900">Administrator</div>
-            <div className="px-2 pb-2 text-xs text-gray-500">admin@tenant.local</div>
+            <div className="px-2 py-1.5 text-sm font-medium text-card-foreground">{role}</div>
+            <div className="px-2 pb-2 text-xs text-muted-foreground break-all">{email}</div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <User size={16} className="mr-2" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/admin/settings')}>
               <Settings size={16} className="mr-2" />
-              <span>Preferences</span>
+              <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-red-600">
+            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={logout}>
               <LogOut size={16} className="mr-2" />
-              <span>Logout</span>
+              <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

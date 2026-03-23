@@ -32,9 +32,9 @@ export default function SupportPage() {
       </div>
 
       <SupportStats />
-      
+
       <TicketFilters filters={filters} onFiltersChange={setFilters} />
-      
+
       <TicketsList filters={filters} />
     </div>
   )

@@ -43,9 +43,32 @@ export default function SystemLogin() {
       login(token, refreshToken, user);
       
       toast.success('System portal access granted');
-      router.push('/systemadmin'); // Redirect to SystemAdmin dashboard
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Authentication failed');
+      switch (user.role) {
+        case 'SystemAdmin':
+        case 'Support':
+          router.push('/systemadmin');
+          break;
+        default:
+          router.push('/systemadmin');
+      }
+    } catch (err: unknown) {
+      const ax = err as {
+        response?: { data?: { message?: string; errors?: unknown } }
+        code?: string
+        message?: string
+      }
+      const apiMsg = ax.response?.data?.message
+      const validation = ax.response?.data?.errors
+      let detail = apiMsg
+      if (!detail && Array.isArray(validation) && validation.length) {
+        detail = validation.map((e: { msg?: string }) => e.msg).filter(Boolean).join(' · ')
+      }
+      if (!detail && ax.code === 'ERR_NETWORK') {
+        detail =
+          'Cannot reach the API. Start the backend on port 5000 (see backend/.env PORT), restart `next dev` after changing frontend/.env, and confirm BACKEND_URL matches your API server.'
+      }
+      if (!detail && ax.message) detail = ax.message
+      toast.error(detail || 'Authentication failed')
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +86,12 @@ export default function SystemLogin() {
         <CardDescription className="text-center text-slate-400">
           Authorized personnel only.
         </CardDescription>
+        {process.env.NODE_ENV === 'development' && (
+          <p className="text-center text-xs text-slate-500 px-2">
+            Dev default (if seeded): <span className="font-mono text-slate-400">admin@finx.com</span> /{' '}
+            <span className="font-mono text-slate-400">Admin@123456</span>
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

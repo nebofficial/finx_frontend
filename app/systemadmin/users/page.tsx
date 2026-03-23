@@ -14,7 +14,7 @@ export default function UsersPage() {
 
       <div className="flex justify-between items-center">
         <UserFilters />
-        <Link href="/admin/users/add">
+        <Link href="/systemadmin/users/add">
           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
             <Plus size={20} />
             Add User

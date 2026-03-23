@@ -21,10 +21,10 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*", 
-    "/systemadmin/:path*", 
-    "/collector/:path*", 
-    "/branchadmin/:path*", 
+    "/admin/:path*",
+    "/systemadmin/:path*",
+    "/collector/:path*",
+    "/branchadmin/:path*",
     "/superadmin/:path*"
   ],
 }

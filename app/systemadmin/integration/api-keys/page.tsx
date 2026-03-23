@@ -10,17 +10,37 @@ import { useState } from 'react'
 export default function APIKeysPage() {
   const [showKey, setShowKey] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
-  // TODO: Fetch API keys from backend API
-  // API keys should NEVER be hardcoded in frontend code
-  const apiKeys: Array<{
-    id: string
-    name: string
-    key: string
-    type: 'Live' | 'Test'
-    created: string
-    lastUsed: string
-    requests: string
-  }> = []
+
+  // Demo UI only — never put real secrets in source control; use env / vault.
+  const apiKeys = [
+    {
+      id: 'demo-prod-1',
+      name: 'Production API Key',
+      key: 'demo_placeholder_prod_key_not_stripe_xxxxxxxxxxxxxxxx',
+      type: 'Live',
+      created: '2024-01-10',
+      lastUsed: '2 minutes ago',
+      requests: '145,230',
+    },
+    {
+      id: 'demo-test-1',
+      name: 'Testing API Key',
+      key: 'demo_placeholder_test_key_not_stripe_xxxxxxxxxxxxxxxx',
+      type: 'Test',
+      created: '2024-01-05',
+      lastUsed: '1 hour ago',
+      requests: '5,420',
+    },
+    {
+      id: 'demo-mobile-1',
+      name: 'Mobile App Integration',
+      key: 'demo_placeholder_mobile_key_not_stripe_xxxxxxxxxxxxxxxx',
+      type: 'Live',
+      created: '2023-12-20',
+      lastUsed: '30 minutes ago',
+      requests: '987,654',
+    },
+  ]
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text)

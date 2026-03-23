@@ -48,6 +48,8 @@ export default function TenantLogin() {
       // Route based on role
       switch (user.role) {
         case 'SuperAdmin':
+          router.push('/superadmin');
+          break;
         case 'Admin':
           router.push('/admin');
           break;
