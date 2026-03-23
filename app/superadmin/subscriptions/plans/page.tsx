@@ -20,10 +20,12 @@ export default function PlansPage() {
             <p className="text-gray-600 text-sm mt-1">Create and manage subscription plans</p>
           </div>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus size={16} className="mr-2" />
-          New Plan
-        </Button>
+        <Link href="/systemadmin/billing/plans">
+          <Button className="bg-primary hover:bg-primary/90">
+            <Plus size={16} className="mr-2" />
+            Manage plans (platform)
+          </Button>
+        </Link>
       </div>
 
       <PlanManager />

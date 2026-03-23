@@ -10,73 +10,66 @@ import {
 } from '@/components/ui/select'
 import { Card } from '@/components/ui/card'
 
+export type AuditFilterState = {
+  source: string
+  search: string
+  dateRange: string
+}
+
 interface AuditFiltersProps {
-  filters: {
-    action: string
-    organization: string
-    user: string
-    dateRange: string
-  }
-  onFiltersChange: (filters: any) => void
+  filters: AuditFilterState
+  onFiltersChange: (filters: AuditFilterState) => void
 }
 
 export default function AuditFilters({ filters, onFiltersChange }: AuditFiltersProps) {
   return (
-    <Card className="p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <Card className="p-4 border-border">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">Action</label>
-          <Select value={filters.action} onValueChange={(value) => onFiltersChange({ ...filters, action: value })}>
-            <SelectTrigger className="border-gray-300">
+          <label className="text-sm font-medium text-card-foreground block mb-2">Source</label>
+          <Select value={filters.source} onValueChange={(value) => onFiltersChange({ ...filters, source: value })}>
+            <SelectTrigger className="border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="created">Created</SelectItem>
-              <SelectItem value="updated">Updated</SelectItem>
-              <SelectItem value="deleted">Deleted</SelectItem>
-              <SelectItem value="login">Login</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="support_ticket">Support tickets</SelectItem>
+              <SelectItem value="announcement">Notifications · announcement</SelectItem>
+              <SelectItem value="maintenance">Notifications · maintenance</SelectItem>
+              <SelectItem value="billing">Notifications · billing</SelectItem>
+              <SelectItem value="loan_overdue">Notifications · loan overdue</SelectItem>
+              <SelectItem value="system">Notifications · system</SelectItem>
+              <SelectItem value="alert">Notifications · alert</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">Organization</label>
-          <Select value={filters.organization} onValueChange={(value) => onFiltersChange({ ...filters, organization: value })}>
-            <SelectTrigger className="border-gray-300">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Organizations</SelectItem>
-              <SelectItem value="green-valley">Green Valley Coop</SelectItem>
-              <SelectItem value="urban-farmers">Urban Farmers Coop</SelectItem>
-              <SelectItem value="mountain-ridge">Mountain Ridge Coop</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">User</label>
+          <label className="text-sm font-medium text-card-foreground block mb-2">Search</label>
           <Input
-            placeholder="Search by email..."
-            value={filters.user}
-            onChange={(e) => onFiltersChange({ ...filters, user: e.target.value })}
-            className="border-gray-300"
+            placeholder="Title, message, subject…"
+            value={filters.search}
+            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
+            className="border-border"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">Date Range</label>
+          <label className="text-sm font-medium text-card-foreground block mb-2">Date range</label>
           <Select value={filters.dateRange} onValueChange={(value) => onFiltersChange({ ...filters, dateRange: value })}>
-            <SelectTrigger className="border-gray-300">
+            <SelectTrigger className="border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="all">All time</SelectItem>
               <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="week">This week</SelectItem>
+              <SelectItem value="month">This month</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground mt-3">
+        Activity is built from tenant notifications and support tickets (no separate audit table in this tenant API).
+      </p>
     </Card>
   )
 }

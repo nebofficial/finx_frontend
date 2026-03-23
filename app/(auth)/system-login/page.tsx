@@ -43,7 +43,14 @@ export default function SystemLogin() {
       login(token, refreshToken, user);
       
       toast.success('System portal access granted');
-      router.push('/systemadmin'); // Redirect to SystemAdmin dashboard
+      switch (user.role) {
+        case 'SystemAdmin':
+        case 'Support':
+          router.push('/systemadmin');
+          break;
+        default:
+          router.push('/systemadmin');
+      }
     } catch (err: unknown) {
       const ax = err as {
         response?: { data?: { message?: string; errors?: unknown } }

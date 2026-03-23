@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ChevronLeft } from 'lucide-react'
+import { toast } from 'sonner'
+import { platformUserApi } from '@/services/api/platformUserApi'
 
 export default function AddUserPage() {
   const router = useRouter()
@@ -22,39 +24,37 @@ export default function AddUserPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'user',
-    status: 'active',
+    password: '',
+    role: 'Support' as 'SystemAdmin' | 'Support',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleRoleChange = (value: string) => {
-    setFormData(prev => ({ ...prev, role: value }))
-  }
-
-  const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, status: value }))
+    setFormData((prev) => ({ ...prev, role: value as 'SystemAdmin' | 'Support' }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      await platformUserApi.create({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role,
       })
-
-      if (response.ok) {
-        router.push('/admin/users')
-      }
-    } catch (error) {
-      console.error('Error creating user:', error)
+      toast.success('User created')
+      router.push('/systemadmin/users')
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : 'Failed to create user'
+      toast.error(msg || 'Failed to create user')
     } finally {
       setIsLoading(false)
     }
@@ -63,14 +63,14 @@ export default function AddUserPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/users">
+        <Link href="/systemadmin/users">
           <Button variant="ghost" size="icon" className="h-10 w-10">
             <ChevronLeft size={20} />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Add User</h1>
-          <p className="text-muted-foreground text-sm mt-1">Create a new system user</p>
+          <h1 className="text-3xl font-bold text-foreground">Add platform user</h1>
+          <p className="text-muted-foreground text-sm mt-1">Create a SystemAdmin or Support account</p>
         </div>
       </div>
 
@@ -82,7 +82,7 @@ export default function AddUserPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter user name"
+              placeholder="Full name"
               required
             />
           </FieldGroup>
@@ -94,8 +94,21 @@ export default function AddUserPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter email address"
+              placeholder="Email"
               required
+            />
+          </FieldGroup>
+
+          <FieldGroup>
+            <FieldLabel>Password</FieldLabel>
+            <Input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="At least 8 characters"
+              required
+              minLength={8}
             />
           </FieldGroup>
 
@@ -106,34 +119,20 @@ export default function AddUserPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </FieldGroup>
-
-          <FieldGroup>
-            <FieldLabel>Status</FieldLabel>
-            <Select value={formData.status} onValueChange={handleStatusChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="Support">Support</SelectItem>
+                <SelectItem value="SystemAdmin">SystemAdmin</SelectItem>
               </SelectContent>
             </Select>
           </FieldGroup>
 
           <div className="flex gap-3 justify-end pt-6">
-            <Link href="/admin/users">
-              <Button variant="outline">Cancel</Button>
+            <Link href="/systemadmin/users">
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
             </Link>
             <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90">
-              {isLoading ? 'Creating...' : 'Create User'}
+              {isLoading ? 'Creating...' : 'Create user'}
             </Button>
           </div>
         </form>

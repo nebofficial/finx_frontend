@@ -91,28 +91,65 @@ export default function ProvisionTenantPage() {
     })();
   }, []);
 
+  /** Emails stay manual; slug / SuperAdmin name / password can be auto-filled server-side. */
+  const passwordOk =
+    form.super_admin_password.trim().length === 0 ||
+    form.super_admin_password.trim().length >= 8;
   const canSubmit = useMemo(() => Boolean(
-    form.name.trim() && form.slug.trim() && form.email.trim() && form.plan_id &&
-    form.super_admin_name.trim() && form.super_admin_email.trim() &&
-    form.super_admin_password.trim().length >= 8
-  ), [form]);
+    form.name.trim() && form.email.trim() && form.plan_id &&
+    form.super_admin_email.trim() && passwordOk
+  ), [form, passwordOk]);
 
   const handleSubmit = async () => {
     if (!canSubmit) { toast.error('Please complete all required fields'); return; }
     setSaving(true);
+    toast.message('Provisioning tenant database — this can take 1–3 minutes. Do not close this tab.', {
+      duration: 8000,
+    });
     try {
-      await api.post('/system/tenants', {
-        name: form.name.trim(), slug: form.slug.trim(), email: form.email.trim(),
-        phone: form.phone.trim() || undefined, address: form.address.trim() || undefined,
-        plan_id: form.plan_id, trial_days: Number(form.trial_days) || 14,
-        super_admin_name: form.super_admin_name.trim(),
-        super_admin_email: form.super_admin_email.trim(),
-        super_admin_password: form.super_admin_password,
-      });
-      toast.success('Tenant provisioned successfully');
+      const res = await api.post(
+        '/system/tenants',
+        {
+          name: form.name.trim(),
+          slug: form.slug.trim() || undefined,
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          address: form.address.trim() || undefined,
+          plan_id: form.plan_id,
+          trial_days: Number(form.trial_days) || 14,
+          super_admin_name: form.super_admin_name.trim() || undefined,
+          super_admin_email: form.super_admin_email.trim(),
+          super_admin_password:
+            form.super_admin_password.trim().length >= 8
+              ? form.super_admin_password
+              : undefined,
+        },
+        { timeout: 300000 }
+      );
+      const genPw = res.data?.data?.generated_super_admin_password;
+      if (genPw) {
+        toast.success(`Tenant created. SuperAdmin password (save it now): ${genPw}`, { duration: 60000 });
+      } else {
+        toast.success('Tenant provisioned successfully');
+      }
       router.push('/systemadmin/tenants');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to provision tenant');
+      const msg = String(err?.message || '');
+      const timedOut =
+        err?.code === 'ECONNABORTED' ||
+        /timeout/i.test(msg) ||
+        err?.response?.status === 504;
+      const proxyDropped =
+        err?.code === 'ECONNRESET' ||
+        /socket hang up|network error|failed to proxy/i.test(msg);
+      if (timedOut || proxyDropped) {
+        toast.error(
+          'The connection closed before the server finished (or timed out). Provisioning can take several minutes — check Tenants and refresh. If the new org appears, it completed successfully.',
+          { duration: 14000 }
+        );
+      } else {
+        toast.error(err?.response?.data?.message || msg || 'Failed to provision tenant');
+      }
     } finally {
       setSaving(false);
     }
@@ -120,11 +157,13 @@ export default function ProvisionTenantPage() {
 
   /* progress indicator */
   const filled = [
-    form.name, form.slug, form.email, form.plan_id,
-    form.super_admin_name, form.super_admin_email,
-    form.super_admin_password.length >= 8 ? 'ok' : '',
+    form.name,
+    form.email,
+    form.plan_id,
+    form.super_admin_email,
+    passwordOk ? 'ok' : '',
   ].filter(Boolean).length;
-  const pct = Math.round((filled / 7) * 100);
+  const pct = Math.round((filled / 5) * 100);
 
   return (
     <div className="space-y-6">
@@ -136,7 +175,7 @@ export default function ProvisionTenantPage() {
             Provision New Tenant
           </h1>
           <p style={{ color: T.sub }} className="mt-1 text-sm">
-            Create a cooperative record, allocate a plan, and generate the SuperAdmin account.
+            Create a Super Admin record, allocate a plan, and generate the SuperAdmin account.
           </p>
         </div>
         <Link href="/systemadmin/tenants">
@@ -173,14 +212,14 @@ export default function ProvisionTenantPage() {
       {/* ── Main layout ── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* ── Cooperative Profile ── */}
+        {/* ── Super Admin Profile ── */}
         <Card style={{ backgroundColor: T.cardBg, borderColor: T.border }}
           className="xl:col-span-2 shadow-sm">
           <CardHeader style={{ backgroundColor: T.headerBg, borderBottom: `1px solid ${T.border}` }}
             className="rounded-t-xl px-6 py-4">
             <CardTitle style={{ color: T.title }} className="flex items-center gap-2 text-base font-semibold">
               <Building2 className="h-5 w-5 text-indigo-500" />
-              Cooperative Profile
+              Super Admin Profile
             </CardTitle>
             <CardDescription style={{ color: T.sub }} className="text-sm mt-0.5">
               Basic identity and subscription details.
@@ -189,31 +228,34 @@ export default function ProvisionTenantPage() {
 
           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
 
-            <Field label="Cooperative Name" required>
+            <Field label="Super Admin Name" required>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
                 <Input
-                  id="name" value={form.name} placeholder="e.g. DigiTiya Cooperative"
+                  id="name" value={form.name} placeholder="e.g. DigiTiya Super Admin"
                   style={inputStyle} className={`${inputCls} pl-9`}
                   onChange={(e) => {
                     const name = e.target.value;
-                    setForm((p) => ({ ...p, name, slug: p.slug || toSlug(name) }));
+                    setForm((p) => ({ ...p, name }));
                   }}
                 />
               </div>
             </Field>
 
-            <Field label="Slug (Tenant ID)" required>
+            <Field label="Slug (optional)">
               <div className="relative">
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
                 <Input
-                  id="slug" value={form.slug} placeholder="e.g. digitiya"
-                  style={inputStyle} className={`${inputCls} pl-9 font-mono`}
+                  id="slug"
+                  value={form.slug}
+                  placeholder={toSlug(form.name) || 'auto from name'}
+                  style={inputStyle}
+                  className={`${inputCls} pl-9 font-mono`}
                   onChange={(e) => setForm((p) => ({ ...p, slug: toSlug(e.target.value) }))}
                 />
               </div>
               <p style={{ color: T.sub }} className="text-xs mt-1">
-                Auto-generated · used as database name prefix
+                Leave empty to auto-generate from the Super Admin name (unique on server).
               </p>
             </Field>
 
@@ -244,7 +286,7 @@ export default function ProvisionTenantPage() {
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 w-4 h-4 text-blue-400" />
                   <Textarea
-                    id="address" value={form.address} placeholder="Full address of the cooperative"
+                    id="address" value={form.address} placeholder="Full address of the Super Admin"
                     style={inputStyle} className={`${inputCls} pl-9 min-h-20 resize-none`}
                     onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
                   />
@@ -294,10 +336,13 @@ export default function ProvisionTenantPage() {
             </CardHeader>
 
             <CardContent className="p-6 space-y-4">
-              <Field label="Full Name" required>
+              <Field label="Full Name (optional)">
                 <Input
-                  id="super_admin_name" value={form.super_admin_name} placeholder="e.g. Ravi Kumar"
-                  style={inputStyle} className={inputCls}
+                  id="super_admin_name"
+                  value={form.super_admin_name}
+                  placeholder="Defaults to Super Admin name"
+                  style={inputStyle}
+                  className={inputCls}
                   onChange={(e) => setForm((p) => ({ ...p, super_admin_name: e.target.value }))}
                 />
               </Field>
@@ -310,15 +355,18 @@ export default function ProvisionTenantPage() {
                 />
               </Field>
 
-              <Field label="Password" required>
+              <Field label="Password (optional)">
                 <Input
-                  id="super_admin_password" type="password" value={form.super_admin_password}
-                  placeholder="Min. 8 characters"
-                  style={inputStyle} className={inputCls}
+                  id="super_admin_password"
+                  type="password"
+                  value={form.super_admin_password}
+                  placeholder="Leave empty to auto-generate"
+                  style={inputStyle}
+                  className={inputCls}
                   onChange={(e) => setForm((p) => ({ ...p, super_admin_password: e.target.value }))}
                 />
                 {form.super_admin_password.length > 0 && form.super_admin_password.length < 8 && (
-                  <p className="text-xs text-rose-500 mt-1">Password must be at least 8 characters</p>
+                  <p className="text-xs text-rose-500 mt-1">Use at least 8 characters or leave empty for auto-generate</p>
                 )}
               </Field>
             </CardContent>
@@ -329,13 +377,11 @@ export default function ProvisionTenantPage() {
             <CardContent className="p-5 space-y-4">
               <div className="space-y-2">
                 {[
-                  { label: 'Cooperative name', done: !!form.name },
-                  { label: 'Unique slug', done: !!form.slug },
+                  { label: 'Super Admin name', done: !!form.name },
                   { label: 'Contact email', done: !!form.email },
                   { label: 'Subscription plan', done: !!form.plan_id },
-                  { label: 'SuperAdmin name', done: !!form.super_admin_name },
                   { label: 'SuperAdmin email', done: !!form.super_admin_email },
-                  { label: 'Strong password', done: form.super_admin_password.length >= 8 },
+                  { label: 'Password (or auto)', done: passwordOk },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2">
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? 'bg-emerald-500' : 'bg-blue-200'

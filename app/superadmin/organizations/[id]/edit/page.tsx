@@ -1,77 +1,109 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { FieldGroup, FieldLabel, Field } from '@/components/ui/field'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
+import { superAdminApi } from '@/services/api/superAdminApi'
+import { toast } from 'sonner'
 
 export default function EditOrganizationPage() {
   const router = useRouter()
   const params = useParams()
-  const id = params.id as string
+  const id = typeof params?.id === 'string' ? params.id : ''
 
+  const [loading, setLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: 'Green Valley Coop',
-    email: 'admin@greenvally.coop',
-    phone: '+1-555-0100',
-    website: 'https://greenvallycoop.com',
-    address: '123 Main St, Springfield, IL 62701',
-    description: 'A thriving agricultural cooperative serving the region',
-    plan: 'premium',
-    adminEmail: 'admin@greenvallycoop.coop',
-    status: 'active',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    logo_url: '',
   })
+
+  const load = useCallback(async () => {
+    if (!id) return
+    setLoading(true)
+    try {
+      const orgRes = await superAdminApi.getOrganization()
+      const org = orgRes.data?.data?.organization as {
+        id: string
+        name: string
+        email: string
+        phone?: string | null
+        address?: string | null
+        logo_url?: string | null
+      }
+      if (!org || org.id !== id) {
+        toast.error('Organization not found.')
+        router.replace('/superadmin/organizations')
+        return
+      }
+      setFormData({
+        name: org.name || '',
+        email: org.email || '',
+        phone: org.phone || '',
+        address: org.address || '',
+        logo_url: org.logo_url || '',
+      })
+    } catch {
+      toast.error('Failed to load organization.')
+      router.replace('/superadmin/organizations')
+    } finally {
+      setLoading(false)
+    }
+  }, [id, router])
+
+  useEffect(() => {
+    void load()
+  }, [load])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handlePlanChange = (value: string) => {
-    setFormData(prev => ({ ...prev, plan: value }))
-  }
-
-  const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, status: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
     try {
-      const response = await fetch(`/api/organizations/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      await superAdminApi.updateOrganization({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || null,
+        address: formData.address.trim() || null,
+        logo_url: formData.logo_url.trim() || null,
       })
-
-      if (response.ok) {
-        router.push(`/superadmin/organizations/${id}`)
-      }
-    } catch (error) {
-      console.error('Error updating organization:', error)
+      toast.success('Organization updated')
+      router.push(`/superadmin/organizations/${id}`)
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : 'Update failed'
+      toast.error(msg || 'Update failed')
     } finally {
       setIsLoading(false)
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh] gap-2 text-gray-600">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        Loading…
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/superadmin/organizations/${id}`}>
           <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -79,124 +111,45 @@ export default function EditOrganizationPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Organization</h1>
-          <p className="text-gray-600 text-sm mt-1">Update organization details and settings</p>
+          <h1 className="text-3xl font-bold text-gray-900">Edit cooperative</h1>
+          <p className="text-gray-600 text-sm mt-1">Updates your tenant profile (API: PUT /super-admin/organization)</p>
         </div>
       </div>
 
-      {/* Form Card */}
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <FieldGroup>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field>
-                <FieldLabel>Organization Name *</FieldLabel>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
+                <FieldLabel>Name *</FieldLabel>
+                <Input name="name" value={formData.name} onChange={handleChange} required />
               </Field>
               <Field>
                 <FieldLabel>Email *</FieldLabel>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <Input type="email" name="email" value={formData.email} onChange={handleChange} required />
               </Field>
             </div>
           </FieldGroup>
 
           <FieldGroup>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel>Phone</FieldLabel>
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Website</FieldLabel>
-                <Input
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                />
-              </Field>
-            </div>
+            <Field>
+              <FieldLabel>Phone</FieldLabel>
+              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} />
+            </Field>
           </FieldGroup>
 
           <FieldGroup>
             <Field>
               <FieldLabel>Address</FieldLabel>
-              <Textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows={2}
-              />
+              <Textarea name="address" value={formData.address} onChange={handleChange} rows={3} />
             </Field>
           </FieldGroup>
 
           <FieldGroup>
             <Field>
-              <FieldLabel>Description</FieldLabel>
-              <Textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={3}
-              />
+              <FieldLabel>Logo URL</FieldLabel>
+              <Input name="logo_url" value={formData.logo_url} onChange={handleChange} placeholder="https://…" />
             </Field>
-          </FieldGroup>
-
-          <FieldGroup>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Field>
-                <FieldLabel>Subscription Plan *</FieldLabel>
-                <Select value={formData.plan} onValueChange={handlePlanChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="trial">Trial (14 days)</SelectItem>
-                    <SelectItem value="starter">Starter</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel>Status *</FieldLabel>
-                <Select value={formData.status} onValueChange={handleStatusChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel>Admin Email *</FieldLabel>
-                <Input
-                  type="email"
-                  name="adminEmail"
-                  value={formData.adminEmail}
-                  onChange={handleChange}
-                  required
-                />
-              </Field>
-            </div>
           </FieldGroup>
 
           <div className="flex gap-3 justify-end pt-4 border-t">
@@ -206,7 +159,7 @@ export default function EditOrganizationPage() {
               </Button>
             </Link>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Updating...' : 'Update Organization'}
+              {isLoading ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </form>

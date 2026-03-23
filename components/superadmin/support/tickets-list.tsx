@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,139 +19,132 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { MoreHorizontal, Eye, Edit2, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { MoreHorizontal, Eye, Loader2 } from 'lucide-react'
+import { tenantSupportApi } from '@/services/api/tenantSupportApi'
+import { toast } from 'sonner'
+import type { TicketFilterState } from '@/components/superadmin/support/ticket-filters'
 
-const mockTickets = [
-  {
-    id: '#2847',
-    subject: 'Cannot access billing reports',
-    organization: 'Green Valley Coop',
-    priority: 'high',
-    status: 'open',
-    assignee: 'John Support',
-    createdAt: '2024-03-15',
-    responses: 3
-  },
-  {
-    id: '#2846',
-    subject: 'User account locked',
-    organization: 'Urban Farmers Coop',
-    priority: 'high',
-    status: 'in-progress',
-    assignee: 'Sarah Agent',
-    createdAt: '2024-03-14',
-    responses: 2
-  },
-  {
-    id: '#2845',
-    subject: 'Export feature not working',
-    organization: 'Mountain Ridge Coop',
-    priority: 'medium',
-    status: 'open',
-    assignee: 'Unassigned',
-    createdAt: '2024-03-14',
-    responses: 1
-  },
-  {
-    id: '#2844',
-    subject: 'API integration issue',
-    organization: 'Riverside Farm Coop',
-    priority: 'medium',
-    status: 'in-progress',
-    assignee: 'Mike Dev',
-    createdAt: '2024-03-13',
-    responses: 4
-  },
-  {
-    id: '#2843',
-    subject: 'Password reset email not received',
-    organization: 'Valley Trees Coop',
-    priority: 'low',
-    status: 'resolved',
-    assignee: 'John Support',
-    createdAt: '2024-03-13',
-    responses: 2
-  },
-]
+type TicketRow = {
+  id: string
+  ticket_no?: string
+  subject: string
+  priority: string
+  status: string
+  createdAt?: string
+}
 
-export default function TicketsList({ filters }: { filters: any }) {
-  const router = useRouter()
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+function statusLabel(s: string) {
+  if (s === 'in_progress') return 'In progress'
+  return s.replace(/_/g, ' ')
+}
 
-  const handleDelete = async () => {
-    if (!deleteId) return
-    setIsDeleting(true)
+export default function TicketsList({ filters }: { filters: TicketFilterState }) {
+  const [tickets, setTickets] = useState<TicketRow[]>([])
+  const [loading, setLoading] = useState(true)
 
+  const load = useCallback(async () => {
+    setLoading(true)
     try {
-      const response = await fetch(`/api/tickets/${deleteId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        setDeleteId(null)
-        router.refresh()
-      }
-    } catch (error) {
-      console.error('Error deleting ticket:', error)
+      const res = await tenantSupportApi.list({ limit: 500 })
+      const list = res.data?.data?.tickets ?? []
+      setTickets(Array.isArray(list) ? list : [])
+    } catch {
+      toast.error('Failed to load tickets.')
+      setTickets([])
     } finally {
-      setIsDeleting(false)
+      setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const filtered = useMemo(() => {
+    const q = filters.search.trim().toLowerCase()
+    return tickets.filter((ticket) => {
+      if (filters.status !== 'all' && ticket.status !== filters.status) return false
+      if (filters.priority !== 'all' && ticket.priority !== filters.priority) return false
+      if (!q) return true
+      const idMatch = ticket.id.toLowerCase().includes(q)
+      const ticketNoMatch = (ticket.ticket_no || '').toLowerCase().includes(q)
+      const sub = (ticket.subject || '').toLowerCase().includes(q)
+      return idMatch || ticketNoMatch || sub
+    })
+  }, [tickets, filters.search, filters.status, filters.priority])
+
+  if (loading) {
+    return (
+      <Card className="p-8 flex items-center gap-2 text-muted-foreground border-border">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        Loading tickets…
+      </Card>
+    )
+  }
+
+  if (tickets.length === 0) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground text-sm border-border">No support tickets yet.</Card>
+    )
+  }
+
+  if (filtered.length === 0) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground text-sm border-border">
+        No tickets match your filters ({tickets.length} total).
+      </Card>
+    )
   }
 
   return (
-    <>
-    <Card>
+    <Card className="border-border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-gray-200">
-            <TableHead className="text-gray-700 font-semibold">Ticket ID</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Subject</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Organization</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Priority</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Status</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Assignee</TableHead>
-            <TableHead className="text-gray-700 font-semibold">Created</TableHead>
-            <TableHead className="text-right text-gray-700 font-semibold">Actions</TableHead>
+          <TableRow className="border-b border-border">
+            <TableHead className="text-card-foreground font-semibold">Ticket</TableHead>
+            <TableHead className="text-card-foreground font-semibold">Subject</TableHead>
+            <TableHead className="text-card-foreground font-semibold">Priority</TableHead>
+            <TableHead className="text-card-foreground font-semibold">Status</TableHead>
+            <TableHead className="text-card-foreground font-semibold">Created</TableHead>
+            <TableHead className="text-right text-card-foreground font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockTickets.map((ticket) => (
-            <TableRow key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <TableCell className="font-mono font-medium text-gray-900">{ticket.id}</TableCell>
-              <TableCell className="font-medium text-gray-900">{ticket.subject}</TableCell>
-              <TableCell className="text-gray-600">{ticket.organization}</TableCell>
+          {filtered.map((ticket) => (
+            <TableRow key={ticket.id} className="border-b border-border hover:bg-muted/40">
+              <TableCell className="font-mono font-medium text-card-foreground">
+                {ticket.ticket_no || ticket.id.slice(0, 8)}
+              </TableCell>
+              <TableCell className="font-medium text-card-foreground max-w-[240px] truncate">{ticket.subject}</TableCell>
               <TableCell>
-                <Badge className={
-                  ticket.priority === 'high' ? 'bg-red-100 text-red-800' :
-                  ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
-                }>
-                  {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                <Badge
+                  className={
+                    ticket.priority === 'high' || ticket.priority === 'critical'
+                      ? 'bg-red-100 text-red-800'
+                      : ticket.priority === 'medium'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-blue-100 text-blue-800'
+                  }
+                >
+                  {ticket.priority}
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge className={
-                  ticket.status === 'open' ? 'bg-red-100 text-red-800' :
-                  ticket.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                  'bg-green-100 text-green-800'
-                }>
-                  {ticket.status === 'in-progress' ? 'In Progress' : ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                <Badge
+                  className={
+                    ticket.status === 'open'
+                      ? 'bg-red-100 text-red-800'
+                      : ticket.status === 'in_progress'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
+                  }
+                >
+                  {statusLabel(ticket.status)}
                 </Badge>
               </TableCell>
-              <TableCell className="text-gray-600">{ticket.assignee}</TableCell>
-              <TableCell className="text-gray-600 text-sm">{new Date(ticket.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '—'}
+              </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -165,19 +159,6 @@ export default function TicketsList({ filters }: { filters: any }) {
                         View
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/superadmin/support/tickets/${ticket.id}/edit`} className="cursor-pointer flex items-center">
-                        <Edit2 size={16} className="mr-2" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setDeleteId(ticket.id)}
-                      className="cursor-pointer text-red-600"
-                    >
-                      <Trash2 size={16} className="mr-2" />
-                      Delete
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -186,27 +167,5 @@ export default function TicketsList({ filters }: { filters: any }) {
         </TableBody>
       </Table>
     </Card>
-
-    <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this ticket? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="flex gap-3 justify-end">
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </AlertDialogAction>
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
-    </>
   )
 }

@@ -13,7 +13,6 @@ export default function SupportPage() {
     search: '',
     status: 'all',
     priority: 'all',
-    organization: 'all'
   })
 
   return (

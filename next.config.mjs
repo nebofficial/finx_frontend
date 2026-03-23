@@ -9,6 +9,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  /**
+   * Next.js rewrites use http-proxy with a default 30s timeout. Tenant provisioning
+   * (create DB, sync schema, seed) often exceeds that — without raising this, the
+   * browser sees ECONNRESET / 502 while the backend still completes successfully.
+   */
+  experimental: {
+    proxyTimeout: 600_000,
+  },
   /** Proxy API + uploads to the FinX backend (avoids browser CORS / ERR_NETWORK to :5000). */
   async rewrites() {
     return [

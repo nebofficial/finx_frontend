@@ -34,11 +34,12 @@ const menuItems = [
     ]
   },
   { icon: BarChart3, label: 'Analytics', href: '/systemadmin/analytics' },
-  { 
+  {
     icon: Database,
     label: 'Monitoring',
     href: '/systemadmin/monitoring',
     submenu: [
+      { label: 'Overview', href: '/systemadmin/monitoring' },
       { label: 'Audit Logs', href: '/systemadmin/monitoring/audit-logs' },
       { label: 'Security', href: '/systemadmin/monitoring/security' },
       { label: 'Performance', href: '/systemadmin/monitoring/performance' },

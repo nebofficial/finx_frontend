@@ -16,44 +16,46 @@ import {
 } from '@/components/ui/select'
 import { FieldGroup, FieldLabel, Field } from '@/components/ui/field'
 import { ChevronLeft } from 'lucide-react'
+import { tenantSupportApi } from '@/services/api/tenantSupportApi'
+import { toast } from 'sonner'
 
 export default function AddTicketPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     subject: '',
-    organization: '',
     priority: 'medium',
     category: 'technical',
     description: '',
-    assignee: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
     try {
-      const response = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      await tenantSupportApi.create({
+        subject: formData.subject.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        priority: formData.priority,
       })
-
-      if (response.ok) {
-        router.push('/superadmin/support/tickets')
-      }
-    } catch (error) {
-      console.error('Error creating ticket:', error)
+      toast.success('Ticket created')
+      router.push('/superadmin/support')
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : 'Failed to create ticket'
+      toast.error(msg || 'Failed to create ticket')
     } finally {
       setIsLoading(false)
     }
@@ -62,14 +64,14 @@ export default function AddTicketPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/superadmin/support/tickets">
+        <Link href="/superadmin/support">
           <Button variant="ghost" size="icon" className="h-10 w-10">
             <ChevronLeft size={20} />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Support Ticket</h1>
-          <p className="text-gray-600 text-sm mt-1">Create a new support ticket</p>
+          <h1 className="text-3xl font-bold text-gray-900">Create support ticket</h1>
+          <p className="text-gray-600 text-sm mt-1">Tenant-scoped ticket (POST /support)</p>
         </div>
       </div>
 
@@ -86,30 +88,6 @@ export default function AddTicketPage() {
                 required
               />
             </Field>
-          </FieldGroup>
-
-          <FieldGroup>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel>Organization *</FieldLabel>
-                <Input
-                  name="organization"
-                  placeholder="Select or type organization"
-                  value={formData.organization}
-                  onChange={handleChange}
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Assign To</FieldLabel>
-                <Input
-                  name="assignee"
-                  placeholder="Support staff member"
-                  value={formData.assignee}
-                  onChange={handleChange}
-                />
-              </Field>
-            </div>
           </FieldGroup>
 
           <FieldGroup>
@@ -138,7 +116,7 @@ export default function AddTicketPage() {
                     <SelectItem value="technical">Technical</SelectItem>
                     <SelectItem value="billing">Billing</SelectItem>
                     <SelectItem value="account">Account</SelectItem>
-                    <SelectItem value="feature_request">Feature Request</SelectItem>
+                    <SelectItem value="feature_request">Feature request</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -161,13 +139,13 @@ export default function AddTicketPage() {
           </FieldGroup>
 
           <div className="flex gap-3 justify-end pt-4 border-t">
-            <Link href="/superadmin/support/tickets">
+            <Link href="/superadmin/support">
               <Button type="button" variant="outline">
                 Cancel
               </Button>
             </Link>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Ticket'}
+              {isLoading ? 'Creating...' : 'Create ticket'}
             </Button>
           </div>
         </form>
