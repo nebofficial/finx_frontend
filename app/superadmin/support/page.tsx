@@ -13,6 +13,7 @@ export default function SupportPage() {
     search: '',
     status: 'all',
     priority: 'all',
+    organization: 'all'
   })
 
   return (
@@ -31,9 +32,9 @@ export default function SupportPage() {
       </div>
 
       <SupportStats />
-      
+
       <TicketFilters filters={filters} onFiltersChange={setFilters} />
-      
+
       <TicketsList filters={filters} />
     </div>
   )
