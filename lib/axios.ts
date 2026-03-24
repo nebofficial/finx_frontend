@@ -72,14 +72,14 @@ api.interceptors.response.use(
         // originalRequest.headers.Authorization = `Bearer ${newToken}`;
         // return api(originalRequest);
 
-        // For MVP: simply clear and redirect to login
+        // For MVP: simply clear and redirect to sign-in
         Cookies.remove('auth_token');
         Cookies.remove('refresh_token');
-        window.location.href = '/login';
+        window.location.href = '/sign-in';
       } catch (refreshError) {
         Cookies.remove('auth_token');
         Cookies.remove('refresh_token');
-        window.location.href = '/login';
+        window.location.href = '/sign-in';
         return Promise.reject(refreshError);
       }
     }

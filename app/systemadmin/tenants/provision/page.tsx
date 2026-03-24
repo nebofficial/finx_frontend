@@ -156,7 +156,7 @@ export default function ProvisionTenantPage() {
         },
         { timeout: 300000 }
       );
-      const genPw = res.data?.data?.generated_admin_password || res.data?.data?.generated_super_admin_password;
+      const genPw = res.data?.data?.generated_admin_password;
       if (genPw) {
         toast.success(`Tenant created. Admin password (save it now): ${genPw}`, { duration: 60000 });
       } else {

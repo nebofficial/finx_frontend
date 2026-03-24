@@ -17,17 +17,6 @@ export function AppSidebar() {
   if (!user) return null;
 
   const routes = {
-    SuperAdmin: [
-      { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-      { name: 'Roles & Permissions', path: '/admin/roles-permissions', icon: ShieldAlert },
-      { name: 'Branches', path: '/admin/branches', icon: Building2 },
-      { name: 'Staff', path: '/admin/staff', icon: ShieldAlert },
-      { name: 'Members', path: '/admin/members', icon: Users },
-      { name: 'Deposits', path: '/admin/deposits', icon: WalletCards },
-      { name: 'Loans', path: '/admin/loans', icon: CreditCard },
-      { name: 'Transactions', path: '/admin/transactions', icon: ArrowRightLeft },
-      { name: 'Settings', path: '/admin/settings', icon: Settings },
-    ],
     Admin: [
       { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
       { name: 'Branches', path: '/admin/branches', icon: Building2 },

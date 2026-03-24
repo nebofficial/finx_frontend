@@ -1,5 +1,5 @@
-import { RolePermissionDashboard } from '@/components/admin/roles-permissions/RolePermissionDashboard'
+import { redirect } from 'next/navigation'
 
 export default function SystemAdminRolesPermissionsPage() {
-  return <RolePermissionDashboard />
+  redirect('/systemadmin/roles')
 }

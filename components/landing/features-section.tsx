@@ -3,7 +3,7 @@
 import { Settings, Users, CreditCard, Shield, Key, Headphones, Building2, UserCheck, Banknote, Wallet, TrendingUp, BarChart3, Lock, Bell, FileText, Zap } from 'lucide-react';
 
 export function FeaturesSection() {
-  const superadminFeatures = [
+  const platformFeatures = [
     {
       icon: Building2,
       title: "Tenant Management",
@@ -195,11 +195,11 @@ export function FeaturesSection() {
           </p>
         </div>
 
-        {/* SuperAdmin Features */}
+        {/* Platform Features */}
         <div className="mb-20">
-          <h3 className="text-2xl font-bold text-gray-900 mb-8">SuperAdmin Dashboard Features</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-8">Platform Dashboard Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {superadminFeatures.map((feature, idx) => {
+          {platformFeatures.map((feature, idx) => {
             const IconComponent = feature.icon;
             const colorClasses = {
               green: "border-green-500 bg-green-50",

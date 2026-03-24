@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const PROTECTED_PREFIXES = ["/admin", "/systemadmin", "/collector", "/branchadmin", "/superadmin"]
+const PROTECTED_PREFIXES = ["/admin", "/systemadmin", "/collector", "/branchadmin"]
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -12,7 +12,7 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value
   if (!token) {
     const url = req.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname = "/sign-in"
     return NextResponse.redirect(url)
   }
 
@@ -24,8 +24,7 @@ export const config = {
     "/admin/:path*",
     "/systemadmin/:path*",
     "/collector/:path*",
-    "/branchadmin/:path*",
-    "/superadmin/:path*"
+    "/branchadmin/:path*"
   ],
 }
 

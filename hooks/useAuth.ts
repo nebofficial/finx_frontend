@@ -36,7 +36,7 @@ export const useAuth = create<AuthState>((set) => ({
     Cookies.remove('auth_token');
     Cookies.remove('refresh_token');
     set({ user: null, isAuthenticated: false });
-    window.location.href = '/login';
+    window.location.href = '/sign-in';
   },
 
   setUser: (user) => set({ user }),

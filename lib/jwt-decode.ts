@@ -21,7 +21,6 @@ export function decodeJwtPayload(token: string): { role?: string; email?: string
 export const ROLE_DASHBOARD: Record<string, string> = {
   SystemAdmin: '/systemadmin',
   Support: '/systemadmin',
-  SuperAdmin: '/superadmin',
   Admin: '/admin',
   BranchAdmin: '/branchadmin',
   FieldCollector: '/collector',

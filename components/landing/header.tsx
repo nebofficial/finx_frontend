@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
@@ -41,11 +42,11 @@ export function Header() {
 
           {/* CTA Buttons */}
           <div className="hidden sm:flex items-center gap-4">
-            <Button variant="outline" size="sm" className="border-border hover:bg-card">
-              Log In
+            <Button asChild variant="outline" size="sm" className="border-border hover:bg-card">
+              <Link href="/sign-in">Log In</Link>
             </Button>
-            <Button size="sm" className="bg-primary hover:bg-primary-light">
-              Get Started
+            <Button asChild size="sm" className="bg-primary hover:bg-primary-light">
+              <Link href="/systemadmin/tenants/provision">Get Started</Link>
             </Button>
           </div>
 
@@ -77,11 +78,11 @@ export function Header() {
               ))}
             </nav>
             <div className="flex flex-col gap-2 px-4">
-              <Button variant="outline" size="sm" className="w-full border-border">
-                Log In
+              <Button asChild variant="outline" size="sm" className="w-full border-border">
+                <Link href="/sign-in">Log In</Link>
               </Button>
-              <Button size="sm" className="w-full bg-primary hover:bg-primary-light">
-                Get Started
+              <Button asChild size="sm" className="w-full bg-primary hover:bg-primary-light">
+                <Link href="/systemadmin/tenants/provision">Get Started</Link>
               </Button>
             </div>
           </div>
