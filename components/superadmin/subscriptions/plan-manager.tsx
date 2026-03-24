@@ -85,11 +85,11 @@ export default function PlanManager() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <p className="text-gray-500">Monthly</p>
-            <p className="font-semibold text-gray-900">${Number(plan.price_monthly ?? 0)}</p>
+            <p className="font-semibold text-gray-900">रू {Number(plan.price_monthly ?? 0)}</p>
           </div>
           <div>
             <p className="text-gray-500">Yearly</p>
-            <p className="font-semibold text-gray-900">${Number(plan.price_yearly ?? 0)}</p>
+            <p className="font-semibold text-gray-900">रू {Number(plan.price_yearly ?? 0)}</p>
           </div>
           <div>
             <p className="text-gray-500">Trial days</p>

@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CopyPlus, Play, Pause, Trash2, Building2, ShieldAlert } from 'lucide-react';
+import { CopyPlus, Play, Pause, Trash2, Building2, ShieldAlert, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 const THEME = {
@@ -34,6 +35,10 @@ export default function TenantsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<{ id: string; name: string } | null>(null);
   const [dropDatabase, setDropDatabase] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [tenantToEdit, setTenantToEdit] = useState<{ id: string; name: string } | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', address: '' });
 
   const fetchTenants = async () => {
     try {
@@ -82,6 +87,42 @@ export default function TenantsPage() {
       fetchTenants();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete tenant');
+    }
+  };
+
+  const openEditDialog = (tenant: any) => {
+    setTenantToEdit({ id: tenant.id, name: tenant.name });
+    setEditForm({
+      name: tenant.name || '',
+      email: tenant.email || '',
+      phone: tenant.phone || '',
+      address: tenant.address || '',
+    });
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!tenantToEdit) return;
+    if (!editForm.name.trim() || !editForm.email.trim()) {
+      toast.error('Name and email are required.');
+      return;
+    }
+    try {
+      setSavingEdit(true);
+      await api.put(`/system/tenants/${tenantToEdit.id}`, {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        phone: editForm.phone.trim() || undefined,
+        address: editForm.address.trim() || undefined,
+      });
+      toast.success('Tenant updated successfully.');
+      setEditOpen(false);
+      setTenantToEdit(null);
+      fetchTenants();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to update tenant');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -289,6 +330,16 @@ export default function TenantsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => openEditDialog(t)}
+                            className="h-8 w-8 text-sky-600 hover:text-sky-700 hover:bg-sky-100 rounded-lg"
+                            title="Edit Tenant"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => openDeleteDialog(t.id, t.name)}
                             className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-100 rounded-lg"
                             title="Delete Tenant"
@@ -368,6 +419,69 @@ export default function TenantsPage() {
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Tenant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit Tenant Dialog ── */}
+      <Dialog
+        open={editOpen}
+        onOpenChange={(v) => {
+          setEditOpen(v);
+          if (!v) setTenantToEdit(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Edit Tenant</DialogTitle>
+            <DialogDescription>
+              {tenantToEdit ? `Update details for ${tenantToEdit.name}.` : 'Update tenant details.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Tenant Name</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-address">Address</Label>
+              <Input
+                id="edit-address"
+                value={editForm.address}
+                onChange={(e) => setEditForm((p) => ({ ...p, address: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

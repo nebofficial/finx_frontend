@@ -26,7 +26,7 @@ const stats: StatCard[] = [
   },
   {
     title: 'Monthly Revenue',
-    value: '$24,500',
+    value: 'रू 24,500',
     change: '+8% from last month',
     icon: <CreditCard className="w-6 h-6" />,
     color: 'text-yellow-600',

@@ -35,20 +35,36 @@ interface PlanItem { id: string; name: string; }
 interface ProvisionFormState {
   name: string;
   slug: string;
+  short_name: string;
+  registration_number: string;
+  registration_date: string;
+  cooperative_type: string;
+  status: 'active' | 'inactive';
   email: string;
   phone: string;
-  address: string;
+  website: string;
+  country: string;
+  state_province: string;
+  district: string;
+  city_village: string;
+  full_address: string;
+  logo_url: string;
+  cover_image_url: string;
+  office_photos: string;
   plan_id: string;
   trial_days: number;
-  super_admin_name: string;
-  super_admin_email: string;
-  super_admin_password: string;
+  admin_name: string;
+  admin_email: string;
+  admin_password: string;
 }
 
 const initialForm: ProvisionFormState = {
-  name: '', slug: '', email: '', phone: '', address: '',
+  name: '', slug: '', short_name: '', registration_number: '', registration_date: '', cooperative_type: '', status: 'active',
+  email: '', phone: '', website: '',
+  country: '', state_province: '', district: '', city_village: '', full_address: '',
+  logo_url: '', cover_image_url: '', office_photos: '',
   plan_id: '', trial_days: 14,
-  super_admin_name: '', super_admin_email: '', super_admin_password: '',
+  admin_name: '', admin_email: '', admin_password: '',
 };
 
 /* ── Helpers ──────────────────────────────────────────────── */
@@ -91,13 +107,13 @@ export default function ProvisionTenantPage() {
     })();
   }, []);
 
-  /** Emails stay manual; slug / SuperAdmin name / password can be auto-filled server-side. */
+  /** Emails stay manual; slug / tenant name / password can be auto-filled server-side. */
   const passwordOk =
-    form.super_admin_password.trim().length === 0 ||
-    form.super_admin_password.trim().length >= 8;
+    form.admin_password.trim().length === 0 ||
+    form.admin_password.trim().length >= 8;
   const canSubmit = useMemo(() => Boolean(
     form.name.trim() && form.email.trim() && form.plan_id &&
-    form.super_admin_email.trim() && passwordOk
+    form.admin_email.trim() && passwordOk
   ), [form, passwordOk]);
 
   const handleSubmit = async () => {
@@ -112,23 +128,37 @@ export default function ProvisionTenantPage() {
         {
           name: form.name.trim(),
           slug: form.slug.trim() || undefined,
+          short_name: form.short_name.trim() || undefined,
+          registration_number: form.registration_number.trim() || undefined,
+          registration_date: form.registration_date || undefined,
+          cooperative_type: form.cooperative_type || undefined,
+          status: form.status,
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
-          address: form.address.trim() || undefined,
+          website: form.website.trim() || undefined,
+          country: form.country.trim() || undefined,
+          state_province: form.state_province.trim() || undefined,
+          district: form.district.trim() || undefined,
+          city_village: form.city_village.trim() || undefined,
+          full_address: form.full_address.trim() || undefined,
+          address: form.full_address.trim() || undefined,
+          logo_url: form.logo_url.trim() || undefined,
+          cover_image_url: form.cover_image_url.trim() || undefined,
+          office_photos: form.office_photos.trim() || undefined,
           plan_id: form.plan_id,
           trial_days: Number(form.trial_days) || 14,
-          super_admin_name: form.super_admin_name.trim() || undefined,
-          super_admin_email: form.super_admin_email.trim(),
-          super_admin_password:
-            form.super_admin_password.trim().length >= 8
-              ? form.super_admin_password
+          admin_name: form.admin_name.trim() || undefined,
+          admin_email: form.admin_email.trim(),
+          admin_password:
+            form.admin_password.trim().length >= 8
+              ? form.admin_password
               : undefined,
         },
         { timeout: 300000 }
       );
-      const genPw = res.data?.data?.generated_super_admin_password;
+      const genPw = res.data?.data?.generated_admin_password || res.data?.data?.generated_super_admin_password;
       if (genPw) {
-        toast.success(`Tenant created. SuperAdmin password (save it now): ${genPw}`, { duration: 60000 });
+        toast.success(`Tenant created. Admin password (save it now): ${genPw}`, { duration: 60000 });
       } else {
         toast.success('Tenant provisioned successfully');
       }
@@ -160,7 +190,7 @@ export default function ProvisionTenantPage() {
     form.name,
     form.email,
     form.plan_id,
-    form.super_admin_email,
+    form.admin_email,
     passwordOk ? 'ok' : '',
   ].filter(Boolean).length;
   const pct = Math.round((filled / 5) * 100);
@@ -175,7 +205,7 @@ export default function ProvisionTenantPage() {
             Provision New Tenant
           </h1>
           <p style={{ color: T.sub }} className="mt-1 text-sm">
-            Create a Super Admin record, allocate a plan, and generate the SuperAdmin account.
+            Create a tenant profile, allocate a plan, and generate the initial Admin account.
           </p>
         </div>
         <Link href="/systemadmin/tenants">
@@ -212,27 +242,27 @@ export default function ProvisionTenantPage() {
       {/* ── Main layout ── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* ── Super Admin Profile ── */}
+        {/* ── Tenant Profile ── */}
         <Card style={{ backgroundColor: T.cardBg, borderColor: T.border }}
           className="xl:col-span-2 shadow-sm">
           <CardHeader style={{ backgroundColor: T.headerBg, borderBottom: `1px solid ${T.border}` }}
             className="rounded-t-xl px-6 py-4">
             <CardTitle style={{ color: T.title }} className="flex items-center gap-2 text-base font-semibold">
               <Building2 className="h-5 w-5 text-indigo-500" />
-              Super Admin Profile
+              Tenant Profile
             </CardTitle>
             <CardDescription style={{ color: T.sub }} className="text-sm mt-0.5">
-              Basic identity and subscription details.
+              Core organization details, address, and contact information.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
 
-            <Field label="Super Admin Name" required>
+            <Field label="Tenant Name" required>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
                 <Input
-                  id="name" value={form.name} placeholder="e.g. DigiTiya Super Admin"
+                  id="name" value={form.name} placeholder="e.g. DigiTiya Cooperative"
                   style={inputStyle} className={`${inputCls} pl-9`}
                   onChange={(e) => {
                     const name = e.target.value;
@@ -255,8 +285,69 @@ export default function ProvisionTenantPage() {
                 />
               </div>
               <p style={{ color: T.sub }} className="text-xs mt-1">
-                Leave empty to auto-generate from the Super Admin name (unique on server).
+                Leave empty to auto-generate from the tenant name (unique on server).
               </p>
+            </Field>
+
+            <Field label="Short Name / Code">
+              <Input
+                id="short_name"
+                value={form.short_name}
+                placeholder="e.g. DCCL"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, short_name: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="Registration Number">
+              <Input
+                id="registration_number"
+                value={form.registration_number}
+                placeholder="e.g. REG-2026-001"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, registration_number: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="Registration Date">
+              <Input
+                id="registration_date"
+                type="date"
+                value={form.registration_date}
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, registration_date: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="Type of Cooperative">
+              <Select value={form.cooperative_type} onValueChange={(v) => setForm((p) => ({ ...p, cooperative_type: v }))}>
+                <SelectTrigger style={inputStyle} className={inputCls}>
+                  <SelectValue placeholder="Select cooperative type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="credit">Credit</SelectItem>
+                  <SelectItem value="agriculture">Agriculture</SelectItem>
+                  <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="multipurpose">Multipurpose</SelectItem>
+                  <SelectItem value="consumer">Consumer</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field label="Status">
+              <Select value={form.status} onValueChange={(v: 'active' | 'inactive') => setForm((p) => ({ ...p, status: v }))}>
+                <SelectTrigger style={inputStyle} className={inputCls}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field label="Tenant Email" required>
@@ -281,16 +372,110 @@ export default function ProvisionTenantPage() {
               </div>
             </Field>
 
+            <Field label="Website (optional)">
+              <Input
+                id="website"
+                value={form.website}
+                placeholder="https://example.org"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="Country">
+              <Input
+                id="country"
+                value={form.country}
+                placeholder="Country"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="State / Province">
+              <Input
+                id="state_province"
+                value={form.state_province}
+                placeholder="State or Province"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, state_province: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="District">
+              <Input
+                id="district"
+                value={form.district}
+                placeholder="District"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, district: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="City / Village">
+              <Input
+                id="city_village"
+                value={form.city_village}
+                placeholder="City or Village"
+                style={inputStyle}
+                className={inputCls}
+                onChange={(e) => setForm((p) => ({ ...p, city_village: e.target.value }))}
+              />
+            </Field>
+
             <div className="md:col-span-2">
-              <Field label="Address">
+              <Field label="Full Address">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 w-4 h-4 text-blue-400" />
                   <Textarea
-                    id="address" value={form.address} placeholder="Full address of the Super Admin"
+                    id="full_address" value={form.full_address} placeholder="Full office address"
                     style={inputStyle} className={`${inputCls} pl-9 min-h-20 resize-none`}
-                    onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                    onChange={(e) => setForm((p) => ({ ...p, full_address: e.target.value }))}
                   />
                 </div>
+              </Field>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label="Organization Logo URL">
+                <Input
+                  id="logo_url"
+                  value={form.logo_url}
+                  placeholder="https://.../logo.png"
+                  style={inputStyle}
+                  className={inputCls}
+                  onChange={(e) => setForm((p) => ({ ...p, logo_url: e.target.value }))}
+                />
+              </Field>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label="Cover Image URL">
+                <Input
+                  id="cover_image_url"
+                  value={form.cover_image_url}
+                  placeholder="https://.../cover.jpg"
+                  style={inputStyle}
+                  className={inputCls}
+                  onChange={(e) => setForm((p) => ({ ...p, cover_image_url: e.target.value }))}
+                />
+              </Field>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label="Office Photos URLs (comma separated)">
+                <Textarea
+                  id="office_photos"
+                  value={form.office_photos}
+                  placeholder="https://.../office-1.jpg, https://.../office-2.jpg"
+                  style={inputStyle}
+                  className={`${inputCls} min-h-16 resize-none`}
+                  onChange={(e) => setForm((p) => ({ ...p, office_photos: e.target.value }))}
+                />
               </Field>
             </div>
 
@@ -321,51 +506,51 @@ export default function ProvisionTenantPage() {
           </CardContent>
         </Card>
 
-        {/* ── SuperAdmin Panel ── */}
+        {/* ── Admin Account Panel ── */}
         <div className="flex flex-col gap-6">
           <Card style={{ backgroundColor: T.cardBg, borderColor: T.border }} className="shadow-sm">
             <CardHeader style={{ backgroundColor: T.headerBg, borderBottom: `1px solid ${T.border}` }}
               className="rounded-t-xl px-6 py-4">
               <CardTitle style={{ color: T.title }} className="flex items-center gap-2 text-base font-semibold">
                 <ShieldCheck className="h-5 w-5 text-emerald-500" />
-                SuperAdmin Setup
+                Admin Account Setup
               </CardTitle>
               <CardDescription style={{ color: T.sub }} className="text-sm mt-0.5">
-                Bootstrap the first privileged tenant user.
+                Bootstrap the first tenant Admin user.
               </CardDescription>
             </CardHeader>
 
             <CardContent className="p-6 space-y-4">
               <Field label="Full Name (optional)">
                 <Input
-                  id="super_admin_name"
-                  value={form.super_admin_name}
-                  placeholder="Defaults to Super Admin name"
+                  id="admin_name"
+                  value={form.admin_name}
+                  placeholder="Defaults to tenant name"
                   style={inputStyle}
                   className={inputCls}
-                  onChange={(e) => setForm((p) => ({ ...p, super_admin_name: e.target.value }))}
+                  onChange={(e) => setForm((p) => ({ ...p, admin_name: e.target.value }))}
                 />
               </Field>
 
               <Field label="Email" required>
                 <Input
-                  id="super_admin_email" type="email" value={form.super_admin_email} placeholder="admin@coop.com"
+                  id="admin_email" type="email" value={form.admin_email} placeholder="admin@coop.com"
                   style={inputStyle} className={inputCls}
-                  onChange={(e) => setForm((p) => ({ ...p, super_admin_email: e.target.value }))}
+                  onChange={(e) => setForm((p) => ({ ...p, admin_email: e.target.value }))}
                 />
               </Field>
 
               <Field label="Password (optional)">
                 <Input
-                  id="super_admin_password"
+                  id="admin_password"
                   type="password"
-                  value={form.super_admin_password}
+                  value={form.admin_password}
                   placeholder="Leave empty to auto-generate"
                   style={inputStyle}
                   className={inputCls}
-                  onChange={(e) => setForm((p) => ({ ...p, super_admin_password: e.target.value }))}
+                  onChange={(e) => setForm((p) => ({ ...p, admin_password: e.target.value }))}
                 />
-                {form.super_admin_password.length > 0 && form.super_admin_password.length < 8 && (
+                {form.admin_password.length > 0 && form.admin_password.length < 8 && (
                   <p className="text-xs text-rose-500 mt-1">Use at least 8 characters or leave empty for auto-generate</p>
                 )}
               </Field>
@@ -377,10 +562,10 @@ export default function ProvisionTenantPage() {
             <CardContent className="p-5 space-y-4">
               <div className="space-y-2">
                 {[
-                  { label: 'Super Admin name', done: !!form.name },
+                  { label: 'Tenant name', done: !!form.name },
                   { label: 'Contact email', done: !!form.email },
                   { label: 'Subscription plan', done: !!form.plan_id },
-                  { label: 'SuperAdmin email', done: !!form.super_admin_email },
+                  { label: 'Admin email', done: !!form.admin_email },
                   { label: 'Password (or auto)', done: passwordOk },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2">

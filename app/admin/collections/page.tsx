@@ -120,7 +120,7 @@ export default function CollectionsRouterPage() {
                         </TableCell>
                         <TableCell className="font-mono text-xs text-indigo-400">{loan.loan_no}</TableCell>
                         <TableCell className="text-slate-200">{loan.member?.name || 'Unknown'}</TableCell>
-                        <TableCell className="text-amber-400 font-medium">${Number(loan.emi_amount).toLocaleString()}</TableCell>
+                        <TableCell className="text-amber-400 font-medium">रू {Number(loan.emi_amount).toLocaleString()}</TableCell>
                         <TableCell>
                            {loan.assigned_collector_id ? (
                              <span className="text-xs text-emerald-500 bg-emerald-500/10 px-2 flex items-center w-fit py-0.5 rounded border border-emerald-500/20">Assigned</span>

@@ -40,15 +40,15 @@ export default function AnalyticsMetrics({
     },
     {
       title: 'Pending revenue',
-      value: loading ? '—' : `$${pending.toFixed(2)}`,
+      value: loading ? '—' : `रू ${pending.toFixed(2)}`,
       change: 'Unpaid / partial (active subs)',
       direction: 'neutral' as const,
       color: 'text-amber-600',
     },
     {
       title: 'MRR (monthly est.)',
-      value: loading ? '—' : `$${mrr.toFixed(2)}`,
-      change: tenants ? `~$${arpu.toFixed(2)} / tenant` : 'No tenants yet',
+      value: loading ? '—' : `रू ${mrr.toFixed(2)}`,
+      change: tenants ? `~रू ${arpu.toFixed(2)} / tenant` : 'No tenants yet',
       direction: mrr > 0 ? ('up' as const) : ('neutral' as const),
       color: mrr > 0 ? 'text-green-600' : 'text-muted-foreground',
     },

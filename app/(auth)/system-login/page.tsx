@@ -39,36 +39,13 @@ export default function SystemLogin() {
     try {
       const res = await api.post('/auth/platform/login', data);
       const { token, refreshToken, user } = res.data.data;
-      
+
       login(token, refreshToken, user);
-      
+
       toast.success('System portal access granted');
-      switch (user.role) {
-        case 'SystemAdmin':
-        case 'Support':
-          router.push('/systemadmin');
-          break;
-        default:
-          router.push('/systemadmin');
-      }
-    } catch (err: unknown) {
-      const ax = err as {
-        response?: { data?: { message?: string; errors?: unknown } }
-        code?: string
-        message?: string
-      }
-      const apiMsg = ax.response?.data?.message
-      const validation = ax.response?.data?.errors
-      let detail = apiMsg
-      if (!detail && Array.isArray(validation) && validation.length) {
-        detail = validation.map((e: { msg?: string }) => e.msg).filter(Boolean).join(' · ')
-      }
-      if (!detail && ax.code === 'ERR_NETWORK') {
-        detail =
-          'Cannot reach the API. Start the backend on port 5000 (see backend/.env PORT), restart `next dev` after changing frontend/.env, and confirm BACKEND_URL matches your API server.'
-      }
-      if (!detail && ax.message) detail = ax.message
-      toast.error(detail || 'Authentication failed')
+      router.push('/systemadmin'); // Redirect to SystemAdmin dashboard
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
@@ -86,41 +63,35 @@ export default function SystemLogin() {
         <CardDescription className="text-center text-slate-400">
           Authorized personnel only.
         </CardDescription>
-        {process.env.NODE_ENV === 'development' && (
-          <p className="text-center text-xs text-slate-500 px-2">
-            Dev default (if seeded): <span className="font-mono text-slate-400">admin@finx.com</span> /{' '}
-            <span className="font-mono text-slate-400">Admin@123456</span>
-          </p>
-        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-300">Email Address</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="admin@codecraft.ai" 
+            <Input
+              id="email"
+              type="email"
+              placeholder="admin@codecraft.ai"
               className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500"
-              {...register('email')} 
+              {...register('email')}
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-slate-300">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
+            <Input
+              id="password"
+              type="password"
               className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500"
-              {...register('password')} 
+              {...register('password')}
             />
             {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.6)]" 
+          <Button
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.6)]"
             disabled={isLoading}
           >
             {isLoading ? 'Authenticating...' : 'Secure Login'}

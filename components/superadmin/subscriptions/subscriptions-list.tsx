@@ -102,7 +102,7 @@ export default function SubscriptionsList() {
               <Badge className="bg-purple-100 text-purple-800 capitalize">{planName}</Badge>
             </TableCell>
             <TableCell className="font-medium text-gray-900">
-              {amount != null && Number.isFinite(amount) ? `$${amount.toFixed(2)}` : '—'}
+              {amount != null && Number.isFinite(amount) ? `रू ${amount.toFixed(2)}` : '—'}
             </TableCell>
             <TableCell className="text-gray-600">
               {endDate ? new Date(endDate).toLocaleDateString() : '—'}

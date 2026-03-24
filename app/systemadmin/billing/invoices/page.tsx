@@ -96,7 +96,7 @@ export default function InvoicesPage() {
     }
     const subject = encodeURIComponent(`Invoice ${invoice.invoice_no}`)
     const body = encodeURIComponent(
-      `Hello,\n\nPlease find invoice ${invoice.invoice_no} for $${Number(invoice.amount).toFixed(2)}.\n\nThank you,\nFinX Billing`
+      `Hello,\n\nPlease find invoice ${invoice.invoice_no} for रू ${Number(invoice.amount).toFixed(2)}.\n\nThank you,\nFinX Billing`
     )
     window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`
   }
@@ -118,7 +118,7 @@ export default function InvoicesPage() {
         <h2>Invoice ${invoice.invoice_no}</h2>
         <p><strong>Tenant:</strong> ${invoice.tenant_name}</p>
         <p><strong>Plan:</strong> ${invoice.plan_name}</p>
-        <p><strong>Amount:</strong> $${Number(invoice.amount).toFixed(2)}</p>
+        <p><strong>Amount:</strong> रू ${Number(invoice.amount).toFixed(2)}</p>
         <p><strong>Date:</strong> ${new Date(invoice.issued_at).toLocaleDateString()}</p>
         <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
         <p><strong>Status:</strong> ${invoice.status}</p>
@@ -221,7 +221,7 @@ export default function InvoicesPage() {
           { label: 'Total Invoices', value: summary.totalInvoices.toString() },
           { label: 'Paid', value: summary.paid.toString() },
           { label: 'Pending', value: summary.pending.toString() },
-          { label: 'Total Revenue', value: `$${Number(summary.totalRevenue).toFixed(2)}` },
+          { label: 'Total Revenue', value: `रू ${Number(summary.totalRevenue).toFixed(2)}` },
         ].map((stat) => (
           <Card key={stat.label} className="p-4">
             <p className="text-muted-foreground text-xs mb-2">{stat.label}</p>
@@ -282,7 +282,7 @@ export default function InvoicesPage() {
                   <td className="py-3 px-4 text-sm font-medium text-card-foreground">{invoice.invoice_no}</td>
                   <td className="py-3 px-4 text-sm text-card-foreground">{invoice.tenant_name}</td>
                   <td className="py-3 px-4 text-sm text-card-foreground">{invoice.plan_name}</td>
-                  <td className="py-3 px-4 text-sm font-semibold text-card-foreground">${Number(invoice.amount).toFixed(2)}</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-card-foreground">रू {Number(invoice.amount).toFixed(2)}</td>
                   <td className="py-3 px-4 text-sm text-card-foreground">{new Date(invoice.issued_at).toLocaleDateString()}</td>
                   <td className="py-3 px-4 text-sm text-card-foreground">{new Date(invoice.due_date).toLocaleDateString()}</td>
                   <td className="py-3 px-4">
@@ -421,7 +421,7 @@ export default function InvoicesPage() {
               <p><span className="font-semibold">Tenant:</span> {selectedInvoice.tenant_name}</p>
               <p><span className="font-semibold">Email:</span> {selectedInvoice.tenant_email || '-'}</p>
               <p><span className="font-semibold">Plan:</span> {selectedInvoice.plan_name}</p>
-              <p><span className="font-semibold">Amount:</span> ${Number(selectedInvoice.amount).toFixed(2)}</p>
+              <p><span className="font-semibold">Amount:</span> रू {Number(selectedInvoice.amount).toFixed(2)}</p>
               <p><span className="font-semibold">Issued:</span> {new Date(selectedInvoice.issued_at).toLocaleDateString()}</p>
               <p><span className="font-semibold">Due:</span> {new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
               <p><span className="font-semibold">Status:</span> {selectedInvoice.status}</p>

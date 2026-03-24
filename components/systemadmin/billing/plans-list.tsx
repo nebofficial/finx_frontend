@@ -157,7 +157,7 @@ export default function PlansList() {
                   </Badge>
                 </div>
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span>${plan.price}/{plan.billing === 'monthly' ? 'mo' : 'yr'}</span>
+                  <span>रू {plan.price}/{plan.billing === 'monthly' ? 'mo' : 'yr'}</span>
                   <span>{plan.features} features</span>
                   <span>{plan.users} subscriptions</span>
                 </div>

@@ -95,7 +95,7 @@ export default function SystemAdminPage() {
     {
       icon: TrendingUp,
       label: 'MRR (est.)',
-      value: loading ? '—' : `$${mrr.toFixed(2)}`,
+      value: loading ? '—' : `रू ${mrr.toFixed(2)}`,
       change: 'From billing analytics',
       color: 'bg-yellow-100',
     },

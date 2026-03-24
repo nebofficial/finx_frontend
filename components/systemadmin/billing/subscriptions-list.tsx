@@ -113,7 +113,7 @@ export default function SubscriptionsList() {
                 </div>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <span>{sub.plan} Plan</span>
-                  <span>MRR: ${sub.mrr}</span>
+                  <span>MRR: रू {sub.mrr}</span>
                   <span>Renews: {sub.nextRenewal}</span>
                 </div>
               </div>

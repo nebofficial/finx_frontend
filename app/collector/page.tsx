@@ -59,7 +59,7 @@ export default function FieldCollectorMobileApp() {
         <div className="relative z-10">
           <h2 className="text-indigo-200 text-sm font-medium mb-1">Today's Target</h2>
           <div className="text-4xl font-extrabold tracking-tight mb-4">
-            ${route.reduce((acc, curr) => acc + Number(curr.emi_amount), 0).toLocaleString()}
+            रू {route.reduce((acc, curr) => acc + Number(curr.emi_amount), 0).toLocaleString()}
           </div>
           
           <div className="grid grid-cols-2 gap-4 mt-6 border-t border-white/10 pt-4">
@@ -106,7 +106,7 @@ export default function FieldCollectorMobileApp() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-amber-400">${Number(stop.emi_amount).toLocaleString()}</div>
+                    <div className="text-lg font-bold text-amber-400">रू {Number(stop.emi_amount).toLocaleString()}</div>
                     <div className="text-xs text-slate-500">Expected EMI</div>
                   </div>
                 </div>

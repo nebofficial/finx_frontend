@@ -73,13 +73,13 @@ export default function LoansPage() {
                         {loan.member?.name || 'Unknown'}
                       </TableCell>
                       <TableCell className="text-slate-300">
-                        ${Number(loan.principal_amount).toLocaleString()}
+                        रू {Number(loan.principal_amount).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-amber-400 font-medium">
-                        ${Number(loan.outstanding_balance).toLocaleString()}
+                        रू {Number(loan.outstanding_balance).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-slate-300">
-                        ${Number(loan.emi_amount).toLocaleString()}
+                        रू {Number(loan.emi_amount).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge 

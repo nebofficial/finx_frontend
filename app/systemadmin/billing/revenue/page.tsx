@@ -52,14 +52,14 @@ export default function RevenueAnalyticsPage() {
   const metrics = useMemo(() => [
     {
       label: 'Monthly Recurring Revenue',
-      value: `$${Number(stats.mrr || 0).toFixed(2)}`,
+      value: `रू ${Number(stats.mrr || 0).toFixed(2)}`,
       change: 'Live',
       icon: DollarSign,
       color: 'bg-green-100',
     },
     {
       label: 'Annual Revenue Run Rate',
-      value: `$${(Number(stats.mrr || 0) * 12).toFixed(2)}`,
+      value: `रू ${(Number(stats.mrr || 0) * 12).toFixed(2)}`,
       change: 'Live',
       icon: TrendingUp,
       color: 'bg-blue-100',
@@ -73,7 +73,7 @@ export default function RevenueAnalyticsPage() {
     },
     {
       label: 'Avg Revenue per Tenant',
-      value: `$${stats.total_tenants ? (Number(stats.mrr || 0) / stats.total_tenants).toFixed(2) : '0.00'}`,
+      value: `रू ${stats.total_tenants ? (Number(stats.mrr || 0) / stats.total_tenants).toFixed(2) : '0.00'}`,
       change: 'Live',
       icon: ShoppingCart,
       color: 'bg-purple-100',
@@ -144,7 +144,7 @@ export default function RevenueAnalyticsPage() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `$${value}`} />
+              <Tooltip formatter={(value) => `रू ${value}`} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -190,11 +190,11 @@ export default function RevenueAnalyticsPage() {
         <h2 className="text-lg font-semibold text-card-foreground mb-4">Top Revenue Tenants</h2>
         <div className="space-y-2">
           {[
-            { name: 'Acme Corporation', mrr: '$2,450', plan: 'Enterprise', growth: '+12%' },
-            { name: 'Global Solutions Ltd', mrr: '$2,050', plan: 'Enterprise', growth: '+18%' },
-            { name: 'Tech Startup Inc', mrr: '$450', plan: 'Professional', growth: '+8%' },
-            { name: 'DataCorp Inc', mrr: '$890', plan: 'Enterprise', growth: '+25%' },
-            { name: 'Innovation Labs', mrr: '$420', plan: 'Professional', growth: '+5%' },
+            { name: 'Acme Corporation', mrr: 'रू 2,450', plan: 'Enterprise', growth: '+12%' },
+            { name: 'Global Solutions Ltd', mrr: 'रू 2,050', plan: 'Enterprise', growth: '+18%' },
+            { name: 'Tech Startup Inc', mrr: 'रू 450', plan: 'Professional', growth: '+8%' },
+            { name: 'DataCorp Inc', mrr: 'रू 890', plan: 'Enterprise', growth: '+25%' },
+            { name: 'Innovation Labs', mrr: 'रू 420', plan: 'Professional', growth: '+5%' },
           ].map((tenant, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 border border-border-light rounded-lg hover:bg-muted transition-colors">
               <div>

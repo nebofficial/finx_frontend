@@ -11,9 +11,9 @@ export default function BillingStats() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState([
-    { title: 'Total Revenue (MRR)', value: '$0', change: 'Live platform data', icon: <DollarSign className="w-6 h-6" />, color: 'text-green-600' },
+    { title: 'Total Revenue (MRR)', value: 'रू 0', change: 'Live platform data', icon: <DollarSign className="w-6 h-6" />, color: 'text-green-600' },
     { title: 'Active Subscriptions', value: '0', change: 'Live platform data', icon: <Users className="w-6 h-6" />, color: 'text-blue-600' },
-    { title: 'Pending Revenue', value: '$0', change: 'Live platform data', icon: <TrendingUp className="w-6 h-6" />, color: 'text-yellow-600' },
+    { title: 'Pending Revenue', value: 'रू 0', change: 'Live platform data', icon: <TrendingUp className="w-6 h-6" />, color: 'text-yellow-600' },
     { title: 'Total Tenants', value: '0', change: 'Live platform data', icon: <Calendar className="w-6 h-6" />, color: 'text-red-600' },
   ])
 
@@ -27,9 +27,9 @@ export default function BillingStats() {
         const data = res?.data?.data?.stats || {}
         if (!mounted) return
         setStats([
-          { title: 'Total Revenue (MRR)', value: `$${Number(data.mrr || 0).toFixed(2)}`, change: 'Collected revenue', icon: <DollarSign className="w-6 h-6" />, color: 'text-green-600' },
+          { title: 'Total Revenue (MRR)', value: `रू ${Number(data.mrr || 0).toFixed(2)}`, change: 'Collected revenue', icon: <DollarSign className="w-6 h-6" />, color: 'text-green-600' },
           { title: 'Active Subscriptions', value: String(data.active_subscriptions || 0), change: 'Currently active', icon: <Users className="w-6 h-6" />, color: 'text-blue-600' },
-          { title: 'Pending Revenue', value: `$${Number(data.pending_revenue || 0).toFixed(2)}`, change: 'Awaiting collection', icon: <TrendingUp className="w-6 h-6" />, color: 'text-yellow-600' },
+          { title: 'Pending Revenue', value: `रू ${Number(data.pending_revenue || 0).toFixed(2)}`, change: 'Awaiting collection', icon: <TrendingUp className="w-6 h-6" />, color: 'text-yellow-600' },
           { title: 'Total Tenants', value: String(data.total_tenants || 0), change: 'Platform cooperatives', icon: <Calendar className="w-6 h-6" />, color: 'text-red-600' },
         ])
       } catch (err) {

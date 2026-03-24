@@ -65,7 +65,7 @@ export default function TenantAdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              ${Number(summary?.today_collections || 0).toLocaleString()}
+              रू {Number(summary?.today_collections || 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>

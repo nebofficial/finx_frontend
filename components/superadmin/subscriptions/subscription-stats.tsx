@@ -41,7 +41,7 @@ export default function SubscriptionStats() {
       }
 
       const amt = sub?.amount != null ? Number(sub.amount) : Number(sub?.plan?.price_monthly ?? 0)
-      setMrrLabel(Number.isFinite(amt) ? `$${amt.toFixed(2)}/mo` : '—')
+      setMrrLabel(Number.isFinite(amt) ? `रू ${amt.toFixed(2)}/mo` : '—')
     } catch {
       setActiveSub(0)
       setTrialCount(0)

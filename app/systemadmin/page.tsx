@@ -70,7 +70,7 @@ export default function SystemDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-800">
-              {stats != null ? `$${stats.mrr.toFixed(2)}` : '—'}
+              {stats != null ? `रू ${stats.mrr.toFixed(2)}` : '—'}
             </div>
             <p className="text-xs text-slate-500 mt-1">Estimated MRR</p>
           </CardContent>
